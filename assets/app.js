@@ -53,7 +53,11 @@
   const basePrice = p => p.variants ? Math.min(...p.variants.map(v => v[1])) : p.price;
   const priceLabel = p => p.variants ? `desde ${money(basePrice(p))}` : money(p.price);
   const rowKey = r => `${r.id}::${r.v ?? ""}`;
-  const rowPrice = r => r.v == null ? byId[r.id].price : byId[r.id].variants[r.v][1];
+  const rowPrice = r => {
+    const p = byId[r.id];
+    if (r.v == null) return p.variants ? p.variants[0][1] : p.price;
+    return p.variants[r.v][1];
+  };
 
   /* ---------------- WhatsApp ---------------- */
   const waLink = text => `${MENU.whatsapp}?text=${encodeURIComponent(text)}`;
@@ -128,12 +132,14 @@
   const cartTotal = () => state.cart.reduce((n, i) => n + rowPrice(i) * i.qty, 0);
 
   function addToCart(id, qty = 1, v = null) {
+    const p = byId[id];
+    if (v == null && p.variants) v = 0;
     const key = `${id}::${v ?? ""}`;
     const row = state.cart.find(i => rowKey(i) === key);
     if (row) row.qty += qty; else state.cart.push({ id, v, qty });
     write(LS.cart, state.cart);
     paintCart();
-    toast(`${byId[id].name} agregado`);
+    toast(`${p.name} agregado`);
   }
 
   function setQty(key, qty) {

@@ -1,8 +1,7 @@
-# COFFEE TIME — prototipo de menú
+# COFFEE TIME — sitio del menú
 
-Prototipo estático inspirado en la **arquitectura** del menú analizado con REA
-(categoría → subcategoría → ficha de producto), con marca, paleta e imágenes
-propias. No usa assets, código ni marcas de terceros.
+Sitio estático de COFFEE TIME: portada, menú completo, promociones, carrito y
+pedidos por WhatsApp. No usa frameworks ni backend; todo vive en `assets/`.
 
 ## Ejecutar
 
@@ -119,28 +118,33 @@ muestran en la sección **Visítanos** del inicio y en `#/contacto`.
 
 ## GitHub
 
-El proyecto está listo para versionarse. Desde la carpeta `cafe-norte`:
+El repositorio local ya está creado en la rama `main` y el remoto está
+configurado como:
 
-```powershell
-git init -b main
-git add .
-git commit -m "COFFEE TIME: portada, menú y pedidos por WhatsApp"
+```
+https://github.com/phylossopho/coffee-time.git
 ```
 
-Crea un repositorio vacío en <https://github.com/new> (sin README, sin licencia)
-y conéctalo:
+Solo falta crear el repositorio vacío en <https://github.com/new> con el nombre
+`coffee-time` (público, sin README ni licencia) y subir el proyecto:
 
 ```powershell
-git remote add origin https://github.com/<usuario>/<repositorio>.git
-git branch -M main
 git push -u origin main
 ```
 
 Para publicarlo gratis con **GitHub Pages**: Settings → Pages → Source
 "Deploy from a branch", branch `main` y carpeta `/ (root)`. Queda en
-`https://<usuario>.github.io/<repositorio>/`. Como el sitio usa rutas con
-`#`, no necesita configuración extra. `.gitignore` excluye dependencias,
-logs y archivos del sistema.
+`https://phylossopho.github.io/coffee-time/`. Como el sitio usa rutas con `#`,
+no necesita configuración extra. `.gitignore` excluye dependencias, logs y
+archivos del sistema.
+
+Para actualizar después de un cambio:
+
+```powershell
+git add .
+git commit -m "Describe el cambio"
+git push
+```
 
 ## Notas
 
@@ -149,4 +153,4 @@ logs y archivos del sistema.
   - `variants: [["Taza chica", 43], ...]` genera selector de tamaño y precio "desde".
   - `flavors: ["Fresa", ...]` muestra los sabores disponibles como etiquetas.
   - `price` se usa cuando no hay variantes.
-- El buscador filtra por nombre, descripción y categoría.
+- El buscador filtra por nombre, descripción, categoría, sabores y tamaños.

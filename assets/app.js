@@ -216,11 +216,11 @@
         </div>
         <button class="car-btn car-prev" type="button" data-car="prev" aria-label="Promoción anterior">‹</button>
         <button class="car-btn car-next" type="button" data-car="next" aria-label="Promoción siguiente">›</button>
-        <div class="car-dots" role="group" aria-label="Elegir promoción">
-          ${list.map((p, i) => `<button class="car-dot${i === 0 ? " is-active" : ""}" type="button"
-               data-car-to="${i}" aria-label="Promoción ${i + 1} de ${list.length}: ${esc(p.title)}"
-               aria-current="${i === 0 ? "true" : "false"}"></button>`).join("")}
-        </div>
+      </div>
+      <div class="car-dots" role="group" aria-label="Elegir promoción">
+        ${list.map((p, i) => `<button class="car-dot${i === 0 ? " is-active" : ""}" type="button"
+             data-car-to="${i}" aria-label="Promoción ${i + 1} de ${list.length}: ${esc(p.title)}"
+             aria-current="${i === 0 ? "true" : "false"}"></button>`).join("")}
       </div>
       <div class="car-bar">
         <div class="car-info" aria-live="polite">
@@ -345,10 +345,16 @@
 
   function filtered(catId = null) {
     const q = state.query.trim().toLowerCase();
-    return MENU.products.filter(p =>
-      (!catId || p.cat === catId) &&
-      (!q || (p.name + " " + p.desc + " " + catById[p.cat].name).toLowerCase().includes(q))
-    );
+    return MENU.products.filter(p => {
+      if (catId && p.cat !== catId) return false;
+      if (!q) return true;
+      const hay = [
+        p.name, p.desc, catById[p.cat].name,
+        ...(p.flavors || []),
+        ...(p.variants || []).map(v => v[0])
+      ].join(" ").toLowerCase();
+      return hay.includes(q);
+    });
   }
 
   function categoryCards() {
@@ -519,7 +525,7 @@
     if (!root) return;
     const list = MENU.promos.filter(p => p.hero);
     const slides = $$(".car-slide", root);
-    const dots = $$(".car-dot", root);
+    const dots = $$(".car-dot");
     if (slides.length < 2) return;
 
     const show = n => {

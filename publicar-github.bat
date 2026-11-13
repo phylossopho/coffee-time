@@ -90,11 +90,26 @@ if /i "!LOCAL!"=="!REMOTE!" (
 )
 
 powershell -NoProfile -ExecutionPolicy Bypass -Command ^
-  "try {" ^
-  "  $r = Invoke-WebRequest -UseBasicParsing -Uri '!SITE!' -Headers @{ 'Cache-Control' = 'no-cache' } -TimeoutSec 30;" ^
-  "  Write-Host ('      GitHub Pages responde ' + $r.StatusCode + ' ' + $r.StatusDescription + '.');" ^
-  "} catch {" ^
-  "  Write-Host '      GitHub Pages aun no responde. Espera 1 o 2 minutos y abre:';" ^
+  "$files = @('assets/app.js','assets/data.js');" ^
+  "$local = ($files | ForEach-Object { (Get-Content -Raw $_).Replace([string][char]13, '') }) -join '#';" ^
+  "$sha = [BitConverter]::ToString([Security.Cryptography.SHA256]::Create().ComputeHash([Text.Encoding]::UTF8.GetBytes($local))).Replace('-','');" ^
+  "$ok = $false;" ^
+  "for ($i = 0; $i -lt 18; $i++) {" ^
+  "  try {" ^
+  "    $remote = @();" ^
+  "    foreach ($f in $files) {" ^
+  "      $r = Invoke-WebRequest -UseBasicParsing -Uri ('!SITE!' + $f + '?ts=' + [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()) -Headers @{ 'Cache-Control' = 'no-cache' } -TimeoutSec 30;" ^
+  "      $remote += $r.Content.Replace([string][char]13, '');" ^
+  "    }" ^
+  "    $rsha = [BitConverter]::ToString([Security.Cryptography.SHA256]::Create().ComputeHash([Text.Encoding]::UTF8.GetBytes(($remote -join '#')))).Replace('-','');" ^
+  "    if ($rsha -eq $sha) { $ok = $true; break }" ^
+  "  } catch {}" ^
+  "  Start-Sleep -Seconds 10" ^
+  "}" ^
+  "if ($ok) {" ^
+  "  Write-Host '      GitHub Pages ya sirve la version publicada.';" ^
+  "} else {" ^
+  "  Write-Host '      GitHub Pages aun esta desplegando. Abre el sitio en 1 o 2 minutos:';" ^
   "  Write-Host '      !SITE!';" ^
   "}"
 

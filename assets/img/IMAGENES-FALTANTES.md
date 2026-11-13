@@ -21,7 +21,7 @@ Mientras no exista, se muestra la ilustración SVG de respaldo.
 
 ---
 
-## 1. Fotos de productos — 35 archivos
+## /* ! 1. Fotos de productos — 35 archivos*/
 
 Ruta: `assets/img/productos/`
 
@@ -68,7 +68,7 @@ Ruta: `assets/img/productos/`
 
 ---
 
-## 2. Promociones — 9 archivos (completas)
+## /* TODO 2. Promociones — 9 archivos (completa*/
 
 Ruta: `assets/img/promociones/`
 
@@ -89,7 +89,7 @@ archivo conservando el mismo nombre.
 
 ---
 
-## 3. Imágenes de marca y QR
+## /* DONE 3. Imágenes de marca y QR*/
 
 | Archivo | Uso | Tamaño |
 |---|---|---|

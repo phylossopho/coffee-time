@@ -1,4 +1,4 @@
-/* COFFEE TIME — datos del menú. Edita aquí para cambiar categorías, productos, precios y promos. */
+/* ! COFFEE TIME — datos del menú. Edita aquí para cambiar categorías, productos, precios y promos. */
 window.MENU = {
   brand: "COFFEE TIME",
   phone: "55 6692 2796",
@@ -10,7 +10,7 @@ window.MENU = {
     image: "assets/img/hero.svg"
   },
 
-  /* Reemplaza estos datos por los reales de la sucursal. */
+  /* ! Reemplaza estos datos por los reales de la sucursal. */
   contact: {
     address: "Av. San Luis Tlatilco, 53580.",
     city: "Naucalpan de Juárez, Méx",
@@ -23,25 +23,25 @@ window.MENU = {
     maps: "https://maps.google.com/?q=COFFEE+TIME"
   },
 
-  /* Mesas del local. El cliente elige una al confirmar el pedido. */
+  /* CONFIG Mesas del local. El cliente elige una al confirmar el pedido. */
   tables: ["Mesa 1", "Mesa 2"],
 
-  /* Datos para el centro QR (ver #/qr). La contraseña del WiFi se agrega
-     cuando esté definida; mientras esté vacía, el letrero se muestra pendiente. */
+  /* TODO Agregar contraseña del WiFi cuando esté definida; mientras esté vacía, el letrero se muestra pendiente. */
   qr: {
     base: "https://phylossopho.github.io/coffee-time/",
     wifi: { ssid: "COFFEE TIME", password: "", security: "WPA" }
   },
 
+  /* CONFIG Categorías principales del menú */
   categories: [
-    { id: "calientes", name: "Bebidas calientes", icon: "cup",     blurb: "Café, chocolate, tisanas y especialidades." },
-    { id: "frias",     name: "Bebidas frías",     icon: "iced",    blurb: "Sodas, smoothies, frappés, malteadas y shakers." },
-    { id: "crepas",    name: "Crepas",            icon: "crepe",   blurb: "Dulces, de fruta o saladas. Un ingrediente incluido." },
-    { id: "comida",    name: "Comida",            icon: "food",    blurb: "Sándwich, chapata, molletes y ensalada." },
-    { id: "extras",    name: "Extras",            icon: "beans",   blurb: "Para personalizar tu bebida o tu crepa." }
+    { id: "calientes", name: "Bebidas calientes", icon: "cup",      blurb: "Café, chocolate, tisanas y especialidades." },
+    { id: "frias",     name: "Bebidas frías",     icon: "iced",     blurb: "Sodas, smoothies, frappés, malteadas y shakers." },
+    { id: "crepas",    name: "Crepas",            icon: "crepe",    blurb: "Dulces, de fruta o saladas. Un ingrediente incluido." },
+    { id: "comida",    name: "Comida",            icon: "food",     blurb: "Sándwich, chapata, molletes y ensalada." },
+    { id: "extras",    name: "Extras",            icon: "beans",    blurb: "Para personalizar tu bebida o tu crepa." }
   ],
 
-  /* ---------------- Personalización ----------------
+  /* CONFIG Personalización de productos (crepas, bebidas y sabores)
      kind: "crepa"   → modal con ingredientes mezclables y precio por cantidad.
      kind: "bebida"  → modal con sabor/mezcla, tamaño/formato y extras.
      kind: "sabor"   → modal solo para elegir sabor (croissant, por ejemplo).
@@ -53,7 +53,7 @@ window.MENU = {
       promoAt: 3,      /* a partir de 3 ingredientes */
       promoPrice: 70,  /* 3 ingredientes por $70 */
       groups: [
-        { name: "Dulce", items: ["Cajeta", "Crema de avellana", "Leche condensada", "Mermelada de zarzamora", "Galleta de chocolate", "Mazapán", "Chocolate semiamargo", "Chocolate con leche", "Chocolate"] },
+        { name: "Dulce", items: ["Cajeta", "Nutella", "Lechera", "Mermelada de zarzamora", "Galleta de chocolate", "Mazapán", "Chocolate semiamargo", "Chocolate con leche", "Chocolate"] },
         { name: "Fruta", items: ["Fresa", "Nuez", "Plátano", "Durazno"] },
         { name: "Salada", items: ["Jamón", "Pepperoni", "Queso crema", "Queso manchego"] }
       ]
@@ -217,6 +217,7 @@ window.MENU = {
       photo: "assets/img/productos/portavaso.webp" }
   ],
 
+  /* CONFIG Promociones activas */
   promos: [
     { id: "p1", title: "Capuchino grande + sándwich", price: 100,
       note: "Llévate un capuchino grande y un sándwich por solo $100.",

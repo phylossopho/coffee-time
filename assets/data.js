@@ -12,12 +12,11 @@ window.MENU = {
 
   /* Reemplaza estos datos por los reales de la sucursal. */
   contact: {
-    address: "Av. Principal 123, Col. Centro",
-    city: "Ciudad de México",
+    address: "Av. San Luis Tlatilco, 53580.",
+    city: "Naucalpan de Juárez, Méx",
     hours: [
-      ["Lunes a viernes", "8:00 – 21:00"],
-      ["Sábado", "9:00 – 21:00"],
-      ["Domingo", "9:00 – 18:00"]
+      ["Lunes a sábado", "9:00 – 20:00"],
+      ["Domingo", "cerrado"]
     ],
     instagram: "https://www.instagram.com/",
     facebook: "https://www.facebook.com/",

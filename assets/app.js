@@ -5,6 +5,8 @@
   const MENU = window.MENU;
   const byId = Object.fromEntries(MENU.products.map(p => [p.id, p]));
   const catById = Object.fromEntries(MENU.categories.map(c => [c.id, c]));
+  const addonById = Object.fromEntries(MENU.customize.addons.map(a => [a.id, a]));
+  const crepaCfg = MENU.customize.crepa;
 
   /* Selección curada para la portada: pocos productos, no los 35. */
   const FEATURED = ["latte", "frappe-basico", "crepa-dulce", "sandwich", "soda-italiana", "ensalada"];
@@ -44,28 +46,86 @@
     pv: 0
   };
 
+  /* Estado del modal de personalización. */
+  const custom = {
+    productId: null,
+    kind: "",
+    variant: null,
+    qty: 1,
+    format: "",
+    flavors: [],
+    flavorText: "",
+    extras: []
+  };
+
   const $ = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
   const money = n => "$" + n.toFixed(2).replace(/\.00$/, "");
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
   const imgFor = p => state.images[p.id] || p.photo || `assets/img/${p.icon}.svg`;
+  const imgClass = p => state.images[p.id] || p.photo ? "photo" : "";
+  const imgFallback = p => `assets/img/${p.icon}.svg`;
+  const imgOnError = p => `this.onerror=null;this.src='${imgFallback(p)}';this.classList.remove('photo')`;
+  const promoImg = p => p.webp || p.img.replace(/\.(jpe?g|png)$/i, ".webp");
+  const promoFallback = p => p.img;
   const basePrice = p => p.variants ? Math.min(...p.variants.map(v => v[1])) : p.price;
-  const priceLabel = p => p.variants ? `desde ${money(basePrice(p))}` : money(p.price);
-  const rowKey = r => `${r.id}::${r.v ?? ""}`;
-  const rowPrice = r => {
+  const priceLabel = p => p.variants || p.kind === "crepa" ? `desde ${money(basePrice(p))}` : money(p.price);
+
+  function crepaPrice(n) {
+    if (n <= 1) return crepaCfg.base;
+    return crepaCfg.promoPrice + Math.max(0, n - crepaCfg.promoAt) * crepaCfg.extra;
+  }
+
+  const addonsFor = p => MENU.customize.addons.filter(a => !a.cats || a.cats.includes(p.cat));
+  const defaultFormat = p => p.cat === "frias" ? "vaso" : "taza";
+  const needsFormat = p => p.kind === "bebida" && !(p.variants || []).some(v => /taza|vaso/i.test(v[0]));
+
+  const rowKey = r => `${r.id}::${r.v ?? ""}::${(r.flavors || []).join("|")}::${(r.extras || []).map(e => `${e.id}${e.option ? "=" + e.option : ""}`).join("|")}::${r.format || ""}`;
+
+  function rowPrice(r) {
     const p = byId[r.id];
-    if (r.v == null) return p.variants ? p.variants[0][1] : p.price;
-    return p.variants[r.v][1];
-  };
+    if (!p) return 0;
+    let base;
+    if (p.kind === "crepa") base = crepaPrice((r.flavors || []).length);
+    else if (r.v != null && p.variants) base = p.variants[r.v]?.[1] ?? basePrice(p);
+    else base = p.variants ? p.variants[0][1] : p.price;
+    const extras = (r.extras || []).reduce((n, e) => n + (addonById[e.id]?.price || 0), 0);
+    return base + extras;
+  }
+
+  function rowDetails(r) {
+    const p = byId[r.id];
+    if (!p) return [];
+    const out = [];
+    if (r.v != null && p.variants) {
+      const variant = p.variants[r.v][0];
+      out.push(variant);
+      if (r.format && !/taza|vaso/i.test(variant)) {
+        out.push(r.format === "taza" ? "Taza (para aquí)" : "Vaso (para llevar)");
+      }
+    } else if (r.format) {
+      out.push(r.format === "taza" ? "Taza (para aquí)" : "Vaso (para llevar)");
+    }
+    if ((r.flavors || []).length) {
+      out.push(`${p.kind === "crepa" ? "Ingredientes" : "Sabor"}: ${r.flavors.join(p.kind === "crepa" ? ", " : " + ")}`);
+    }
+    if ((r.extras || []).length) {
+      out.push(`Extras: ${r.extras.map(e => {
+        const a = addonById[e.id];
+        return a ? a.name + (e.option ? ` (${e.option})` : "") : e.id;
+      }).join(", ")}`);
+    }
+    return out;
+  }
 
   /* ---------------- WhatsApp ---------------- */
   const waLink = text => `${MENU.whatsapp}?text=${encodeURIComponent(text)}`;
   const orderMessage = () => {
     const lines = state.cart.map(i => {
       const p = byId[i.id];
-      const v = i.v == null ? "" : ` (${p.variants[i.v][0]})`;
-      return `• ${i.qty} × ${p.name}${v} — ${money(rowPrice(i) * i.qty)}`;
+      const details = rowDetails(i);
+      return `• ${i.qty} × ${p.name} — ${money(rowPrice(i) * i.qty)}${details.length ? "\n   " + details.join("\n   ") : ""}`;
     });
     return [
       "¡Hola COFFEE TIME! Quiero hacer este pedido:",
@@ -131,12 +191,22 @@
   const cartCount = () => state.cart.reduce((n, i) => n + i.qty, 0);
   const cartTotal = () => state.cart.reduce((n, i) => n + rowPrice(i) * i.qty, 0);
 
-  function addToCart(id, qty = 1, v = null) {
+  function addToCart(id, qty = 1, v = null, opts = {}) {
     const p = byId[id];
     if (v == null && p.variants) v = 0;
-    const key = `${id}::${v ?? ""}`;
-    const row = state.cart.find(i => rowKey(i) === key);
-    if (row) row.qty += qty; else state.cart.push({ id, v, qty });
+    const row = {
+      id,
+      v,
+      qty,
+      kind: opts.kind || p.kind || "",
+      flavors: opts.flavors || [],
+      extras: opts.extras || [],
+      format: opts.format || ""
+    };
+    const key = rowKey(row);
+    const existing = state.cart.find(i => rowKey(i) === key);
+    if (existing) existing.qty += qty;
+    else state.cart.push(row);
     write(LS.cart, state.cart);
     paintCart();
     toast(`${p.name} agregado`);
@@ -165,18 +235,20 @@
     }
     body.innerHTML = state.cart.map(i => {
       const p = byId[i.id];
-      const v = i.v == null ? "" : p.variants[i.v][0];
+      const key = rowKey(i);
+      const details = rowDetails(i);
       return `<div class="cart-item">
-        <img src="${imgFor(p)}" alt="">
+        <img src="${imgFor(p)}" alt="" loading="lazy" class="${imgClass(p)}" onerror="${imgOnError(p)}">
         <div>
           <h4>${esc(p.name)}</h4>
-          <div class="muted">${v ? esc(v) + " · " : ""}${money(rowPrice(i))} · ${i.qty} pza</div>
-          <button class="rm" data-remove="${rowKey(i)}">Quitar</button>
+          ${details.map(d => `<div class="muted cart-detail">${esc(d)}</div>`).join("")}
+          <div class="muted cart-detail">${money(rowPrice(i))} c/u · ${i.qty} pza</div>
+          <button class="rm" data-remove="${esc(key)}">Quitar</button>
         </div>
         <div class="qty">
-          <button data-dec="${rowKey(i)}" aria-label="Quitar uno">−</button>
+          <button data-dec="${esc(key)}" aria-label="Quitar uno">−</button>
           <output>${i.qty}</output>
-          <button data-inc="${rowKey(i)}" aria-label="Agregar uno">+</button>
+          <button data-inc="${esc(key)}" aria-label="Agregar uno">+</button>
         </div>
       </div>`;
     }).join("");
@@ -216,8 +288,8 @@
           ${list.map((p, i) => `<div class="car-slide${i === 0 ? " is-active" : ""}" data-slide="${i}"
                aria-hidden="${i === 0 ? "false" : "true"}">
             <div class="car-bg" aria-hidden="true" style="background-image:url('${p.img}')"></div>
-            <img src="${p.img}" alt="${esc(p.title)}" decoding="async" ${i === 0 ? 'fetchpriority="high"' : ""}
-                 onerror="this.onerror=null;this.src='${p.art}'">
+            <img src="${promoImg(p)}" alt="${esc(p.title)}" decoding="async" ${i === 0 ? 'fetchpriority="high"' : ""}
+                 onerror="this.onerror=null;this.src='${promoFallback(p)}'">
           </div>`).join("")}
         </div>
         <button class="car-btn car-prev" type="button" data-car="prev" aria-label="Promoción anterior">‹</button>
@@ -272,8 +344,8 @@
       <div class="promos">
         ${list.map(p => `<article class="promo">
           <div class="promo-media">
-            <img src="${p.img}" alt="${esc(p.title)}" loading="lazy"
-                 onerror="this.onerror=null;this.src='${p.art}'">
+            <img src="${promoImg(p)}" alt="${esc(p.title)}" loading="lazy"
+                 onerror="this.onerror=null;this.src='${promoFallback(p)}'">
             <span class="promo-badge">${esc(p.badge)}</span>
           </div>
           <div class="promo-body">
@@ -331,7 +403,7 @@
     return `<article class="card">
       <a class="card-media" href="#/producto/${p.id}" aria-label="Ver ${esc(p.name)}">
         ${p.tag ? `<span class="tag">${esc(p.tag)}</span>` : ""}
-        <img src="${imgFor(p)}" alt="${esc(p.name)}" loading="lazy">
+        <img src="${imgFor(p)}" alt="${esc(p.name)}" loading="lazy" class="${imgClass(p)}" onerror="${imgOnError(p)}">
       </a>
       <div class="card-body">
         <h3><a href="#/producto/${p.id}">${esc(p.name)}</a></h3>
@@ -437,48 +509,70 @@
       ${grid(list)}`;
   }
 
+  function customSummary(p) {
+    if (p.kind === "crepa") {
+      return `<div class="custom-summary">
+        <strong>Elige tus ingredientes</strong>
+        <p>Puedes mezclar dulce, fruta y salada. 1 ingrediente = ${money(crepaCfg.base)} · 3 ingredientes = ${money(crepaCfg.promoPrice)}.</p>
+      </div>`;
+    }
+    if (p.kind === "bebida") {
+      return `<div class="custom-summary">
+        <strong>Personaliza tu bebida</strong>
+        <p>Elige ${p.flavors || p.askFlavor ? "sabor o mezcla, " : ""}tamaño/formato y extras en el siguiente paso.</p>
+      </div>`;
+    }
+    return `<div class="custom-summary">
+      <strong>Elige el sabor</strong>
+      <p>Selecciona el sabor al agregar al pedido.</p>
+    </div>`;
+  }
+
   function productView(id) {
     const p = byId[id];
     if (!p) return notFound();
     const c = catById[p.cat];
     const rel = MENU.products.filter(x => x.cat === p.cat && x.id !== p.id).slice(0, 3);
     const hasV = !!p.variants;
-    const price = hasV ? p.variants[state.pv][1] : p.price;
+    const modalKind = !!p.kind;
+    const price = modalKind ? basePrice(p) : hasV ? p.variants[state.pv][1] : p.price;
     return `<div class="wrap crumbs"><a href="#/">Inicio</a> / <a href="#/menu">Menú</a> / <a href="#/categoria/${c.id}">${esc(c.name)}</a> / ${esc(p.name)}</div>
       <section class="wrap product">
         <div class="product-media">
-          <img src="${imgFor(p)}" alt="${esc(p.name)}" class="${state.images[p.id] || p.photo ? "photo" : ""}">
+          <img src="${imgFor(p)}" alt="${esc(p.name)}" class="${imgClass(p)}" onerror="${imgOnError(p)}">
         </div>
         <div class="product-info">
           ${p.tag ? `<span class="eyebrow">${esc(p.tag)}</span>` : ""}
           <h1>${esc(p.name)}</h1>
           <p class="lead">${esc(p.desc)}</p>
 
-          ${hasV ? `<div class="variant-block">
+          ${modalKind ? customSummary(p) : ""}
+
+          ${!modalKind && hasV ? `<div class="variant-block">
             <span class="variant-label">Elige tamaño / formato</span>
             <div class="variants">
               ${p.variants.map((v, i) => `<button class="chip" data-pv="${i}" aria-pressed="${i === state.pv}">${esc(v[0])} · ${money(v[1])}</button>`).join("")}
             </div>
           </div>` : ""}
 
-          ${p.flavors ? `<div class="variant-block">
+          ${!modalKind && p.flavors ? `<div class="variant-block">
             <span class="variant-label">Sabores disponibles</span>
             <div class="flavors">${p.flavors.map(f => `<span class="flavor">${esc(f)}</span>`).join("")}</div>
           </div>` : ""}
 
-          <div class="product-price" id="prod-price">${money(price)}</div>
+          <div class="product-price" id="prod-price">${modalKind ? priceLabel(p) : money(price)}</div>
           <div class="product-actions">
             <div class="qty">
               <button data-pq="-1" aria-label="Menos">−</button>
               <output id="pq">${state.pq}</output>
               <button data-pq="1" aria-label="Más">+</button>
             </div>
-            <button class="btn btn-primary" data-add-prod="${p.id}">Agregar ${state.pq} al pedido</button>
+            <button class="btn btn-primary" data-add-prod="${p.id}">${modalKind ? "Elegir opciones" : `Agregar ${state.pq} al pedido`}</button>
           </div>
           <div class="meta">
             <div><strong>Categoría</strong>${esc(c.name)}</div>
             <div><strong>Pedidos</strong>${esc(MENU.phone)}</div>
-            <div><strong>Extras</strong>Ingrediente +$10</div>
+            ${p.kind === "crepa" ? `<div><strong>Promo</strong>3 ingredientes por ${money(crepaCfg.promoPrice)}</div>` : ""}
           </div>
           <p style="margin-top:20px"><button class="upload-link" data-upload="${p.id}">Cambiar foto de este producto</button></p>
         </div>
@@ -512,6 +606,278 @@
 
   function notFound() {
     return `<div class="wrap" style="padding:80px 0"><h1>No encontrado</h1><p class="muted">Esa página no existe en el prototipo.</p><a class="btn btn-primary" href="#/">Volver al menú</a></div>`;
+  }
+
+  /* ---------------- Modal de personalización ---------------- */
+  const SERVING = [
+    { id: "taza", label: "Taza", hint: "para aquí" },
+    { id: "vaso", label: "Vaso", hint: "para llevar" }
+  ];
+
+  function variantGroups(p) {
+    const taza = [], vaso = [], otros = [];
+    p.variants.forEach((v, i) => {
+      if (/^taza\s+/i.test(v[0])) taza.push({ i, label: v[0].replace(/^taza\s+/i, "") });
+      else if (/^vaso\s+/i.test(v[0])) vaso.push({ i, label: v[0].replace(/^vaso\s+/i, "") });
+      else otros.push({ i, label: v[0] });
+    });
+    const out = [];
+    if (taza.length) out.push({ name: "Taza · para aquí", items: taza });
+    if (vaso.length) out.push({ name: "Vaso · para llevar", items: vaso });
+    if (otros.length) out.push({ name: taza.length || vaso.length ? "Otros tamaños" : "Tamaño", items: otros });
+    return out;
+  }
+
+  function customUnitPrice() {
+    const p = byId[custom.productId];
+    if (!p) return 0;
+    let base;
+    if (p.kind === "crepa") base = crepaPrice(custom.flavors.length);
+    else if (p.variants) base = p.variants[custom.variant ?? 0][1];
+    else base = p.price;
+    return base + custom.extras.reduce((n, e) => n + (addonById[e.id]?.price || 0), 0);
+  }
+
+  function customMissing(p) {
+    if (p.kind === "crepa" && !custom.flavors.length) return "Elige al menos un ingrediente";
+    if (p.flavors && !custom.flavors.length) return "Elige al menos un sabor";
+    if (p.askFlavor && !custom.flavorText.trim()) return "Escribe el sabor que deseas";
+    if (custom.extras.some(e => addonById[e.id]?.options && !e.option)) return "Elige el sabor del jarabe";
+    return "";
+  }
+
+  function customNote(p) {
+    if (p.kind === "crepa") {
+      const n = custom.flavors.length;
+      if (n === 0) return `Elige al menos 1 ingrediente. 1 = ${money(crepaCfg.base)} · 3 = ${money(crepaCfg.promoPrice)}.`;
+      if (n === 1) return `Con 3 ingredientes pagas ${money(crepaCfg.promoPrice)}. Cada ingrediente extra cuesta ${money(crepaCfg.extra)}.`;
+      if (n === 2) return `Te falta 1 ingrediente y pagas lo mismo: ${money(crepaCfg.promoPrice)}. ¡El tercero va incluido!`;
+      if (n === crepaCfg.promoAt) return `Promo aplicada: 3 ingredientes por ${money(crepaCfg.promoPrice)}.`;
+      const total = crepaCfg.promoPrice + (n - crepaCfg.promoAt) * crepaCfg.extra;
+      return `${n} ingredientes: ${money(total)}. Cada ingrediente después de 3 cuesta ${money(crepaCfg.extra)}.`;
+    }
+    if (p.kind === "bebida") {
+      if (p.flavors && !custom.flavors.length) return "Elige al menos un sabor o mezcla.";
+      if (p.askFlavor && !custom.flavorText.trim()) return "Escribe el sabor que deseas.";
+      if (custom.extras.some(e => addonById[e.id]?.options && !e.option)) return "Elige el sabor del jarabe.";
+      return "Taza = para aquí · Vaso = para llevar.";
+    }
+    return "";
+  }
+
+  function customMarkup(p) {
+    const kind = p.kind;
+    const blocks = [];
+
+    if (kind === "crepa") {
+      blocks.push(`<section class="opt-block">
+        <div class="opt-head">
+          <h3 id="opt-flavors">Ingredientes</h3>
+          <span class="opt-hint">Puedes mezclar dulce, fruta y salada.</span>
+        </div>
+        ${crepaCfg.groups.map(g => `<div class="opt-group">
+          <span class="opt-group-name">${esc(g.name)}</span>
+          <div class="opt-chips">
+            ${g.items.map(f => `<button class="opt-chip" type="button" data-flavor="${esc(f)}" aria-pressed="false">${esc(f)}</button>`).join("")}
+          </div>
+        </div>`).join("")}
+      </section>`);
+    } else if (p.flavors) {
+      blocks.push(`<section class="opt-block">
+        <div class="opt-head">
+          <h3 id="opt-flavors">Sabor o mezcla</h3>
+          <span class="opt-hint">Elige uno o varios.</span>
+        </div>
+        <div class="opt-chips">
+          ${p.flavors.map(f => `<button class="opt-chip" type="button" data-flavor="${esc(f)}" aria-pressed="false">${esc(f)}</button>`).join("")}
+        </div>
+      </section>`);
+    } else if (p.askFlavor) {
+      blocks.push(`<section class="opt-block">
+        <div class="opt-head">
+          <h3 id="opt-flavors">Sabor</h3>
+          <span class="opt-hint">Escríbelo y lo preparamos.</span>
+        </div>
+        <label class="opt-field">Sabor de ${esc(p.name.toLowerCase())}
+          <input type="text" id="modal-flavor-text" maxlength="60" placeholder="Ej. manzanilla, menta, frutos rojos" autocomplete="off">
+        </label>
+      </section>`);
+    }
+
+    if (p.variants) {
+      blocks.push(`<section class="opt-block">
+        <div class="opt-head">
+          <h3 id="opt-size">Tamaño / formato</h3>
+          <span class="opt-hint">Taza = para aquí · Vaso = para llevar.</span>
+        </div>
+        ${variantGroups(p).map(g => `<div class="opt-group">
+          <span class="opt-group-name">${esc(g.name)}</span>
+          <div class="opt-chips">
+            ${g.items.map(it => `<button class="opt-chip opt-size" type="button" data-modal-variant="${it.i}" aria-pressed="${it.i === custom.variant}">${esc(it.label)}</button>`).join("")}
+          </div>
+        </div>`).join("")}
+      </section>`);
+    } else if (kind === "bebida" && needsFormat(p)) {
+      blocks.push(`<section class="opt-block">
+        <div class="opt-head">
+          <h3 id="opt-size">Formato</h3>
+          <span class="opt-hint">Taza = para aquí · Vaso = para llevar.</span>
+        </div>
+        <div class="opt-chips">
+          ${SERVING.map(s => `<button class="opt-chip" type="button" data-modal-format="${s.id}" aria-pressed="${custom.format === s.id}">${esc(s.label)} <small>${esc(s.hint)}</small></button>`).join("")}
+        </div>
+      </section>`);
+    }
+
+    const addons = addonsFor(p);
+    if (addons.length) {
+      blocks.push(`<section class="opt-block">
+        <div class="opt-head">
+          <h3>¿Quieres agregar un extra?</h3>
+          <span class="opt-hint">Opcional.</span>
+        </div>
+        <div class="extras-list">
+          ${addons.map(a => `<div class="extra-row">
+            <label class="extra-check">
+              <input type="checkbox" data-addon="${a.id}">
+              <span>${esc(a.name)}${a.note ? ` <small>${esc(a.note)}</small>` : ""}</span>
+              <strong>+${money(a.price)}</strong>
+            </label>
+            ${a.options ? `<label class="extra-option" data-addon-option-wrap="${a.id}" hidden>
+              <span>Elige el sabor de ${esc(a.name.toLowerCase())}:</span>
+              <select data-addon-option="${a.id}">
+                <option value="">Elige sabor…</option>
+                ${a.options.map(o => `<option value="${esc(o)}">${esc(o)}</option>`).join("")}
+              </select>
+            </label>` : ""}
+          </div>`).join("")}
+        </div>
+      </section>`);
+    }
+
+    return `<div class="modal-card">
+      <header class="modal-head">
+        <div class="modal-product">
+          <img src="${imgFor(p)}" alt="" class="${imgClass(p)}" onerror="${imgOnError(p)}">
+          <div>
+            <h2 id="modal-title">${esc(p.name)}</h2>
+            <p>${esc(p.desc)}</p>
+          </div>
+        </div>
+        <button class="icon-btn" type="button" data-close-modal aria-label="Cerrar">✕</button>
+      </header>
+      <div class="modal-body">
+        ${blocks.join("")}
+        <p class="promo-note" id="modal-note" aria-live="polite"></p>
+      </div>
+      <footer class="modal-foot">
+        <div class="modal-sum">
+          <div class="modal-qty">
+            <span>Cantidad</span>
+            <div class="qty">
+              <button type="button" data-modal-qty="-1" aria-label="Menos">−</button>
+              <output id="modal-qty">${custom.qty}</output>
+              <button type="button" data-modal-qty="1" aria-label="Más">+</button>
+            </div>
+          </div>
+          <div class="modal-total"><span>Total</span><strong id="modal-total" aria-live="polite">${money(customUnitPrice() * custom.qty)}</strong></div>
+        </div>
+        <button class="btn btn-primary btn-block" type="button" data-modal-add id="modal-add">Agregar al pedido</button>
+        <p class="modal-legal">Precios en pesos · el pedido se confirma por WhatsApp.</p>
+      </footer>
+    </div>`;
+  }
+
+  function syncCustom() {
+    const p = byId[custom.productId];
+    const dlg = $("#custom-dialog");
+    if (!p || !dlg) return;
+
+    $$("[data-flavor]", dlg).forEach(b => {
+      const on = custom.flavors.includes(b.dataset.flavor);
+      b.classList.toggle("is-on", on);
+      b.setAttribute("aria-pressed", String(on));
+    });
+
+    $$("[data-modal-variant]", dlg).forEach(b => {
+      const on = Number(b.dataset.modalVariant) === custom.variant;
+      b.classList.toggle("is-on", on);
+      b.setAttribute("aria-pressed", String(on));
+    });
+
+    $$("[data-modal-format]", dlg).forEach(b => {
+      const on = b.dataset.modalFormat === custom.format;
+      b.classList.toggle("is-on", on);
+      b.setAttribute("aria-pressed", String(on));
+    });
+
+    $$("[data-addon]", dlg).forEach(cb => {
+      cb.checked = custom.extras.some(e => e.id === cb.dataset.addon);
+    });
+    $$("[data-addon-option-wrap]", dlg).forEach(w => {
+      w.hidden = !custom.extras.some(e => e.id === w.dataset.addonOptionWrap);
+    });
+    $$("[data-addon-option]", dlg).forEach(sel => {
+      const e = custom.extras.find(x => x.id === sel.dataset.addonOption);
+      sel.value = e?.option || "";
+    });
+
+    const qtyOut = $("#modal-qty", dlg);
+    if (qtyOut) qtyOut.textContent = custom.qty;
+    const total = $("#modal-total", dlg);
+    if (total) total.textContent = money(customUnitPrice() * custom.qty);
+    const note = $("#modal-note", dlg);
+    if (note) note.textContent = customNote(p);
+    const add = $("#modal-add", dlg);
+    if (add) {
+      const missing = customMissing(p);
+      add.disabled = !!missing;
+      add.setAttribute("aria-disabled", String(!!missing));
+    }
+  }
+
+  function openCustom(id, opts = {}) {
+    const p = byId[id];
+    if (!p) return;
+    if (!p.kind) {
+      addToCart(id, opts.qty || 1, p.variants ? (opts.variant ?? 0) : null);
+      return;
+    }
+    custom.productId = id;
+    custom.kind = p.kind;
+    custom.variant = p.variants ? (opts.variant ?? 0) : null;
+    custom.qty = Math.max(1, Math.min(20, opts.qty || 1));
+    custom.format = needsFormat(p) ? defaultFormat(p) : "";
+    custom.flavors = [];
+    custom.flavorText = "";
+    custom.extras = [];
+
+    const dlg = $("#custom-dialog");
+    if (dlg.open) dlg.close();
+    dlg.innerHTML = customMarkup(p);
+    dlg.showModal();
+    syncCustom();
+    dlg.querySelector("[data-flavor], [data-modal-variant], [data-modal-format]")?.focus();
+  }
+
+  function closeCustom() {
+    const dlg = $("#custom-dialog");
+    if (dlg?.open) dlg.close();
+  }
+
+  function addCustomToCart() {
+    const p = byId[custom.productId];
+    if (!p) return;
+    const missing = customMissing(p);
+    if (missing) { toast(missing); return; }
+    const flavors = p.askFlavor && !p.flavors ? [custom.flavorText.trim()] : [...custom.flavors];
+    addToCart(p.id, custom.qty, custom.variant, {
+      kind: p.kind,
+      flavors,
+      extras: custom.extras.map(e => ({ id: e.id, option: e.option || "" })),
+      format: needsFormat(p) ? custom.format : ""
+    });
+    closeCustom();
   }
 
   /* ---------------- Carrusel de promociones ---------------- */
@@ -608,7 +974,7 @@
 
   /* ---------------- Eventos ---------------- */
   document.addEventListener("click", e => {
-    const t = e.target.closest("[data-add],[data-add-prod],[data-inc],[data-dec],[data-remove],[data-pq],[data-pv],[data-upload],[data-close-drawer],[data-noop],[data-preset],[data-car],[data-car-to],[data-car-pause],[data-clear-query]");
+    const t = e.target.closest("[data-add],[data-add-prod],[data-inc],[data-dec],[data-remove],[data-pq],[data-pv],[data-upload],[data-close-drawer],[data-noop],[data-preset],[data-car],[data-car-to],[data-car-pause],[data-clear-query],[data-close-modal],[data-flavor],[data-addon],[data-modal-variant],[data-modal-format],[data-modal-qty],[data-modal-add]");
     if (!t) return;
 
     if (t.matches("[data-clear-query]")) {
@@ -630,14 +996,45 @@
       return;
     }
 
-    if (t.matches("[data-add]")) { addToCart(t.dataset.add); return; }
-    if (t.matches("[data-add-prod]")) {
-      const p = byId[t.dataset.addProd];
-      addToCart(p.id, state.pq, p.variants ? state.pv : null);
+    if (t.matches("[data-add]")) {
+      const p = byId[t.dataset.add];
+      if (p?.kind) openCustom(p.id);
+      else addToCart(t.dataset.add);
       return;
     }
-    if (t.matches("[data-inc]")) { const r = state.cart.find(i => rowKey(i) === t.dataset.inc); setQty(t.dataset.inc, r.qty + 1); return; }
-    if (t.matches("[data-dec]")) { const r = state.cart.find(i => rowKey(i) === t.dataset.dec); setQty(t.dataset.dec, r.qty - 1); return; }
+    if (t.matches("[data-add-prod]")) {
+      const p = byId[t.dataset.addProd];
+      if (p?.kind) openCustom(p.id, { qty: state.pq, variant: p.variants ? state.pv : null });
+      else addToCart(p.id, state.pq, p.variants ? state.pv : null);
+      return;
+    }
+
+    if (t.matches("[data-close-modal]")) { closeCustom(); return; }
+    if (t.matches("[data-flavor]")) {
+      const f = t.dataset.flavor;
+      const i = custom.flavors.indexOf(f);
+      if (i >= 0) custom.flavors.splice(i, 1); else custom.flavors.push(f);
+      syncCustom();
+      return;
+    }
+    if (t.matches("[data-modal-variant]")) { custom.variant = Number(t.dataset.modalVariant); syncCustom(); return; }
+    if (t.matches("[data-modal-format]")) { custom.format = t.dataset.modalFormat; syncCustom(); return; }
+    if (t.matches("[data-modal-qty]")) {
+      custom.qty = Math.max(1, Math.min(20, custom.qty + Number(t.dataset.modalQty)));
+      syncCustom();
+      return;
+    }
+    if (t.matches("[data-modal-add]")) { addCustomToCart(); return; }
+    if (t.matches("[data-addon]")) {
+      const id = t.dataset.addon;
+      if (t.checked) custom.extras.push({ id, option: "" });
+      else custom.extras = custom.extras.filter(x => x.id !== id);
+      syncCustom();
+      return;
+    }
+
+    if (t.matches("[data-inc]")) { const r = state.cart.find(i => rowKey(i) === t.dataset.inc); if (r) setQty(t.dataset.inc, r.qty + 1); return; }
+    if (t.matches("[data-dec]")) { const r = state.cart.find(i => rowKey(i) === t.dataset.dec); if (r) setQty(t.dataset.dec, r.qty - 1); return; }
     if (t.matches("[data-remove]")) { setQty(t.dataset.remove, 0); return; }
 
     if (t.matches("[data-pv]")) {
@@ -653,7 +1050,10 @@
       const out = $("#pq");
       if (out) out.textContent = state.pq;
       const btn = $("[data-add-prod]");
-      if (btn) btn.textContent = `Agregar ${state.pq} al pedido`;
+      if (btn) {
+        const bp = byId[btn.dataset.addProd];
+        btn.textContent = bp?.kind ? "Elegir opciones" : `Agregar ${state.pq} al pedido`;
+      }
       return;
     }
 
@@ -671,6 +1071,25 @@
       });
       return;
     }
+  });
+
+  document.addEventListener("change", e => {
+    const sel = e.target.closest("[data-addon-option]");
+    if (!sel) return;
+    const entry = custom.extras.find(x => x.id === sel.dataset.addonOption);
+    if (entry) entry.option = sel.value;
+    syncCustom();
+  });
+
+  document.addEventListener("input", e => {
+    if (e.target.id !== "modal-flavor-text") return;
+    custom.flavorText = e.target.value;
+    syncCustom();
+  });
+
+  const customDialog = $("#custom-dialog");
+  customDialog?.addEventListener("click", e => {
+    if (e.target === customDialog) closeCustom();
   });
 
   $("#search").addEventListener("input", e => {

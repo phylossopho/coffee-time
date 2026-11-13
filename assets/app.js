@@ -524,11 +524,13 @@
   function initCarousel() {
     clearInterval(carTimer);
     carTimer = null;
+    carPaused = false;
     carShow = null;
     carStart = null;
 
     const root = $("#hero-carousel");
     if (!root) return;
+    const region = root.closest(".hero-side") || root;
     const list = MENU.promos.filter(p => p.hero);
     const slides = $$(".car-slide", root);
     const dots = $$(".car-dot");
@@ -560,10 +562,10 @@
     carShow = n => { show(n); start(); };
     carStart = start;
 
-    root.addEventListener("mouseenter", stop);
-    root.addEventListener("mouseleave", start);
-    root.addEventListener("focusin", stop);
-    root.addEventListener("focusout", start);
+    region.addEventListener("mouseenter", stop);
+    region.addEventListener("mouseleave", start);
+    region.addEventListener("focusin", stop);
+    region.addEventListener("focusout", start);
 
     show(0);
     start();

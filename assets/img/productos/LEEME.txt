@@ -3,21 +3,25 @@ Fotos de productos
 
 Guarda aquí las fotos con el nombre del id del producto, por ejemplo:
 
-  capuccino.jpg
-  latte.jpg
-  molletes.jpg
-  ensalada.jpg
-  crepa-dulce.jpg
+  capuccino.webp
+  latte.webp
+  molletes.webp
+  ensalada.webp
+  crepa-dulce.webp
 
-Formato: JPG o PNG, cuadradas (mínimo 600 x 600 px), menos de 300 KB
-para que la página cargue rápido.
+Formato: WebP, cuadradas de 800 x 800 px (mínimo 600 x 600 px), calidad 80-82
+y entre 60 y 120 KB para que la página cargue rápido. Guarda en sRGB y sin
+espacios en el nombre.
 
-Después, en assets/data.js, agrega el campo "photo" al producto:
+Después, en assets/data.js, el campo "photo" del producto debe apuntar aquí:
 
   { id: "capuccino", cat: "calientes", name: "Capuccino", icon: "cup",
-    photo: "assets/img/products/capuccino.jpg", ... }
+    photo: "assets/img/productos/capuccino.webp", ... }
 
-Mientras no exista "photo", la tarjeta usa la ilustración vectorial.
+Los productos ya traen esa ruta escrita; solo coloca el archivo con el nombre
+correcto y aparece solo. Mientras no exista, la tarjeta usa la ilustración
+vectorial de respaldo.
+
 También puedes cambiar la foto desde la ficha del producto en la página
 (botón "Cambiar foto de este producto"); esa versión se guarda solo en tu
 navegador.
@@ -29,3 +33,9 @@ Ids de productos:
   shaker-capuchino, shaker-tisanas, shaker-latte, shaker-mokachino,
   crepa-dulce, crepa-fruta, crepa-salada, croissant-rol, sandwich, chapata,
   molletes, ensalada, extra-crepa, perlas, jarabe, portavaso
+
+La lista completa con medidas y orden sugerido está en:
+  assets/img/IMAGENES-FALTANTES.md
+
+Las promociones NO van aquí: van en assets/img/promociones/ como
+promo-1.webp ... promo-9.webp.

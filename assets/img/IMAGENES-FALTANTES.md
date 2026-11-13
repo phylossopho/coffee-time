@@ -23,7 +23,7 @@ Mientras no exista, se muestra la ilustración SVG de respaldo.
 
 ## 1. Fotos de productos — 35 archivos
 
-Ruta: `assets/img/products/`
+Ruta: `assets/img/productos/`
 
 | # | Archivo | Producto | Categoría |
 |---|---|---|---|
@@ -64,38 +64,39 @@ Ruta: `assets/img/products/`
 | 35 | `portavaso.webp` | Portavaso | Extras (opcional) |
 
 > Los cuatro extras pueden quedarse con su SVG; no es obligatorio fotografiarlos.
+> Hoy **ninguna** foto de producto está cargada: todas usan la ilustración de respaldo.
 
 ---
 
-## 2. Promociones — 9 archivos
+## 2. Promociones — 9 archivos (completas)
 
-Ruta: `assets/img/promos/`
+Ruta: `assets/img/promociones/`
 
-| Archivo WebP | Promoción | Estado actual |
-|---|---|---|
-| `promo-1.webp` | Capuchino grande + sándwich · $100 | Ya existe `promo-1.jpg`; solo convertir |
-| `promo-2.webp` | Chapata de jamón y queso manchego · $100 | Ya existe `promo-2.jpg`; solo convertir |
-| `promo-3.webp` | Crepa · 3 ingredientes por $70 | Ya existe `promo-3.jpg`; solo convertir |
-| `promo-4.webp` | Smoothies con perlas explosivas · 2 × $100 | **Falta la foto real** (hoy hay PNG de respaldo) |
-| `promo-5.webp` | Ensalada · $100 | **Falta la foto real** (hoy hay PNG de respaldo) |
-| `promo-6.webp` | Frappes básicos · 2 × $100 | **Falta la foto real** (hoy hay PNG de respaldo) |
-| `promo-7.webp` | Croissant rol · $50 | **Falta la foto real** (hoy hay PNG de respaldo) |
-| `promo-8.webp` | Latte caliente grande · $46 | **Falta la foto real** (hoy hay PNG de respaldo) |
-| `promo-9.webp` | Sodas italianas · 2 × $100 | Ya existe `promo-9.jpg`; solo convertir |
+| Archivo WebP | Promoción |
+|---|---|
+| `promo-1.webp` | Capuchino grande + sándwich · $100 |
+| `promo-2.webp` | Chapata de jamón y queso manchego · $100 |
+| `promo-3.webp` | Crepa · 3 ingredientes por $70 |
+| `promo-4.webp` | Smoothies con perlas explosivas · 2 × $100 |
+| `promo-5.webp` | Ensalada · $100 |
+| `promo-6.webp` | Frappes básicos · 2 × $100 |
+| `promo-7.webp` | Croissant rol · $50 |
+| `promo-8.webp` | Latte caliente grande · $46 |
+| `promo-9.webp` | Sodas italianas · 2 × $100 |
 
-Las promociones 4–8 son las únicas que hoy no tienen foto real. Si prefieres
-seguir usando JPG/PNG, también funcionan: el sitio intenta primero el `.webp`
-y, si no existe, usa el archivo actual.
+Las nueve promociones ya tienen su WebP real. Para cambiar una, reemplaza el
+archivo conservando el mismo nombre.
 
 ---
 
-## 3. Imágenes opcionales de marca
+## 3. Imágenes de marca y QR
 
 | Archivo | Uso | Tamaño |
 |---|---|---|
 | `assets/img/logo.png` (ya existe) | Logo del encabezado | 512 × 512, fondo transparente |
 | `assets/img/pattern.png` (ya existe) | Fondo de doodles | 1600 × 1600 |
 | `assets/img/hero.svg` (respaldo) | Imagen del hero (hoy manda el carrusel) | 1200 × 900 |
+| `assets/img/qr/*.svg` (ya existen) | Letreros QR: menú, pedir, promos, opinión, club y favoritos | 512 × 512 |
 
 Las tarjetas de categoría usan iconos SVG (`cup.svg`, `iced.svg`, `crepe.svg`,
 `food.svg`, `beans.svg`, `salad.svg`, `tea.svg`, `frappe.svg`). No hace falta
@@ -105,18 +106,15 @@ cambiarlos; si algún día quieres fotos por categoría, se puede ajustar el có
 
 ## Orden sugerido para ir creando
 
-1. **Promos 4–8** (son las que hoy se ven como respaldo).
-2. **Favoritos de la portada:** `latte`, `frappe-basico`, `crepa-dulce`,
+1. **Favoritos de la portada:** `latte`, `frappe-basico`, `crepa-dulce`,
    `sandwich`, `soda-italiana`, `ensalada`.
-3. **Crepas y bebidas calientes** (las más pedidas).
-4. **Bebidas frías y shakers.**
-5. **Comida y extras.**
+2. **Crepas y bebidas calientes** (las más pedidas).
+3. **Bebidas frías y shakers.**
+4. **Comida y extras.**
 
-Cuando termines una tanda, súbela con:
+Cuando termines una tanda, publícala con:
 
 ```powershell
-cd "C:\Users\Jorge\Desktop\JORGE\Proyecto predeterminado\cafe-norte"
-git add .
-git commit -m "Agrega fotos WebP de productos"
-git push
+cd "C:\Users\Jorge\Desktop\JORGE\Proyecto predeterminado\coffee-time"
+.\publicar-github.bat
 ```

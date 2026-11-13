@@ -6,7 +6,7 @@ pedidos por WhatsApp. No usa frameworks ni backend; todo vive en `assets/`.
 ## Ejecutar
 
 ```powershell
-cd "C:\Users\Jorge\Desktop\JORGE\Proyecto predeterminado\cafe-norte"
+cd "C:\Users\Jorge\Desktop\JORGE\Proyecto predeterminado\coffee-time"
 python -m http.server 4173 --bind 127.0.0.1
 ```
 
@@ -17,17 +17,16 @@ Abre <http://localhost:4173/>. También funciona abriendo `index.html` directame
 
 ```
 index.html            shell: header, main vacío, drawers de carrito y tema, modal de personalización
-assets/data.js        ← edita aquí categorías, productos, precios, sabores, extras, promos y contacto
+assets/data.js        ← edita aquí categorías, productos, precios, sabores, extras, promos, mesas y QR
 assets/app.js         router, carrito con personalización, modal, carrusel, tema, pedido por WhatsApp
-assets/styles.css     tema por variables CSS + layout responsive + patrón de fondo + modal
+assets/styles.css     tema por variables CSS + layout responsive + patrón de fondo + modal + QR
 assets/img/logo.png   logo real de COFFEE TIME (header)
 assets/img/pattern.png fondo de doodles (arte original, fondo transparente)
 assets/img/*.svg      ilustraciones de producto generadas (respaldo)
-assets/img/promos/    promociones (promo-1..9; las 1, 2, 3 y 9 son arte real)
-assets/img/products/  fotos WebP de productos (ver IMAGENES-FALTANTES.md)
-assets/img/IMAGENES-FALTANTES.md  lista de fotos pendientes, nombres y medidas
-gen-images.js         regenera las ilustraciones SVG
-gen-png.js            rasteriza los SVG a PNG solo si falta el PNG (usa `sharp`)
+assets/img/promociones/  promociones vigentes (promo-1..9.webp)
+assets/img/productos/    fotos WebP de productos (ver IMAGENES-FALTANTES.md)
+assets/img/qr/           letreros QR listos para imprimir
+assets/img/IMAGENES-FALTANTES.md  lista de fotos, nombres y medidas
 ```
 
 ## Portada y menú
@@ -38,6 +37,18 @@ completo vive en `#/menu`, con buscador y chips por categoría.
 
 - Para cambiar los favoritos: edita `FEATURED` en `assets/app.js`.
 - Para agregar categorías o productos: edita `assets/data.js`.
+
+## Formatos de bebida
+
+| Bebidas | Formatos |
+|---|---|
+| Café, té y bebidas calientes | **Taza** (para aquí) y **Vaso** (para llevar) |
+| Smoothies, frappés, malteadas y sodas | **Vaso 12 oz** únicamente |
+| Shakers | **Vaso chico** y **Vaso grande** |
+
+El modal muestra una pista según el producto: si solo hay un formato, lo dice
+(“Se sirve en vaso para llevar”), y ya no aparece el selector Taza/Vaso cuando
+el producto no lo maneja.
 
 ## Personalización de pedidos
 
@@ -73,8 +84,7 @@ customize: {
 - **Tisanas y Shaker Tisanas:** usan `askFlavor: true` y piden escribir el
   sabor, porque su lista real aún no está definida.
 - **Tamaño y formato:** si las variantes ya dicen *Taza* / *Vaso*, se agrupan
-  por formato. Si no, aparece un selector aparte. **Taza = para aquí**,
-  **Vaso = para llevar**.
+  por formato. **Taza = para aquí**, **Vaso = para llevar**.
 - **Extras:** se muestran solo los que aplican a la categoría del producto.
 
 ### Extras (`MENU.customize.addons`)
@@ -83,16 +93,50 @@ customize: {
 |---|---|---|
 | Perlas explosivas | $15 | Bebidas frías |
 | Jarabe 1 oz | $15 | Calientes y frías (elige sabor) |
-| Licor de café | $15 (provisional) | Calientes y frías |
 | Portavaso | $5 | Calientes y frías |
 
-El licor de café y los sabores de jarabe son **provisionales**; ajústalos en
-`assets/data.js` cuando el dueño confirme disponibilidad y precios.
+Los sabores de jarabe son **provisionales**; ajústalos en `assets/data.js`
+cuando el dueño confirme disponibilidad y precios. El licor de café se retiró
+por ahora.
 
 ### Otros tipos
 
 `kind: "sabor"` (por ejemplo, el croissant rol) abre un modal para elegir un
 solo sabor, sin tamaño ni extras.
+
+## Mesas, QR y letreros
+
+El local maneja dos mesas. `MENU.tables` en `assets/data.js` define sus nombres:
+
+```js
+tables: ["Mesa 1", "Mesa 2"]
+```
+
+El carrito incluye el selector **“¿Dónde lo vas a disfrutar?”** con las
+opciones **Para llevar**, **Mesa 1** y **Mesa 2**. La elección se guarda en
+`localStorage` y se agrega como `Lugar:` en el mensaje de WhatsApp, así que un
+mismo QR puede servir para todo el local.
+
+La vista `#/qr` reúne seis letreros listos para imprimir:
+
+| Letrero | QR apunta a |
+|---|---|
+| Menú completo | `#/menu` del sitio |
+| Pedir por WhatsApp | chat con mensaje listo |
+| Promociones | `#/promociones` |
+| Tu opinión | WhatsApp con mensaje de opinión |
+| Club Coffee Time | WhatsApp con alta al club |
+| Favoritos de la casa | portada del sitio |
+
+Los SVG viven en `assets/img/qr/` y se generan con cualquier generador de QR
+(contenido en `MENU.qr.base` y en el número de WhatsApp). El botón **Imprimir
+todos** usa los estilos `@media print` para acomodar dos letreros por hoja.
+
+También existe la ruta `#/mesa/1` y `#/mesa/2`: abre el menú con esa mesa ya
+seleccionada. Sirve si más adelante quieren un QR por mesa.
+
+**Pendiente:** el QR de WiFi se agrega cuando exista la contraseña real
+(`MENU.qr.wifi.password`, hoy vacío).
 
 ## Carrusel de promociones
 
@@ -117,20 +161,16 @@ Para sumar una promo al carrusel: agrega su imagen y ponle `hero: true`.
 |---|---|---|
 | `assets/img/logo.png` | logo del header | cuadrada, 256×256 |
 | `assets/img/pattern.png` | fondo de doodles (cover, sin repetir) | 1104×1552 |
-| `assets/img/promos/promo-1.jpg` | Capuchino + sándwich | vertical 4:5 |
-| `assets/img/promos/promo-2.jpg` | Chapata + capuchino | vertical 4:5 |
-| `assets/img/promos/promo-3.jpg` | Crepa $70 | vertical 4:5 |
-| `assets/img/promos/promo-9.jpg` | Sodas italianas 2×$100 | vertical 4:5 |
-| `assets/img/promos/promo-4..8.png` | Smoothies, ensalada, frappes, croissant, latte | vertical 4:5 |
+| `assets/img/promociones/promo-1..9.webp` | las nueve promociones | vertical 4:5 |
+| `assets/img/productos/<id>.webp` | fotos de producto | cuadrada 1:1 |
+| `assets/img/qr/*.svg` | letreros QR | cuadrado |
 
-Las tarjetas de promoción usan formato vertical 4:5. El sitio intenta cargar
-primero `promo-N.webp` y, si no existe, usa el JPG/PNG actual. Las promos 4 a 8
-siguen con arte vectorial de respaldo: reemplaza `promo-4.png` … `promo-8.png`
-por tus diseños y se verán solas. El patrón se pinta con `opacity: .055`.
+Las tarjetas de promoción usan formato vertical 4:5 y cargan directamente el
+WebP. El patrón se pinta con `opacity: .055`.
 
 ## Fotos de producto
 
-El sitio ya apunta a `assets/img/products/<id>.webp` para los 35 productos. No
+El sitio ya apunta a `assets/img/productos/<id>.webp` para los 35 productos. No
 hace falta editar código: guarda la imagen con el nombre exacto y aparece sola.
 Mientras no exista, la tarjeta usa la ilustración vectorial de respaldo.
 
@@ -145,15 +185,15 @@ Si prefieres otra ruta o formato, edita el campo `photo` del producto:
 
 ```js
 { id: "capuccino", cat: "calientes", name: "Capuccino", icon: "cup",
-  photo: "assets/img/products/capuccino.webp", /* ... */ }
+  photo: "assets/img/productos/capuccino.webp", /* ... */ }
 ```
 
 ## Pedido por WhatsApp
 
 El botón **Confirmar pedido** del carrito arma un mensaje con cada producto,
-su tamaño/formato, sabores o ingredientes, extras, cantidad y el total, y abre
-WhatsApp al 55 6692 2796. Cada promo tiene además su propio botón **Pedir** con
-el texto de esa promoción.
+su tamaño/formato, sabores o ingredientes, extras, cantidad, el total y el
+lugar elegido, y abre WhatsApp al 55 6692 2796. Cada promo tiene además su
+propio botón **Pedir** con el texto de esa promoción.
 
 Las líneas del carrito se separan por producto, variante, sabores, extras y
 formato: dos cafés iguales con distinto jarabe quedan como dos líneas.
@@ -180,42 +220,52 @@ muestran en la sección **Visítanos** del inicio y en `#/contacto`.
 | `#/menu` | menú completo con buscador y chips |
 | `#/categoria/<id>` | categoría (`calientes`, `frias`, `crepas`, `comida`, `extras`) |
 | `#/producto/<id>` | ficha con variantes, sabores, cantidad y cambio de foto |
+| `#/promociones` | las nueve promociones completas |
+| `#/contacto` | dirección, horarios, redes y WhatsApp |
+| `#/qr` | centro de QR y letreros imprimibles |
+| `#/mesa/<n>` | menú con la mesa `n` preseleccionada |
 
 ## Pendientes con el dueño
 
 Estos datos están provisionales en `assets/data.js`:
 
-- Lista y precios reales de extras (en especial **licor de café**).
 - Sabores reales de tisanas y Shaker Tisanas.
 - Precio de las crepas con **4 o más** ingredientes.
 - Dirección, ciudad, horarios, Instagram y Facebook reales.
+- Contraseña real del WiFi para el letrero QR.
 - Fotos WebP pendientes (ver `assets/img/IMAGENES-FALTANTES.md`).
-| `#/promociones` | las 9 promociones completas |
-| `#/contacto` | dirección, horarios, redes y WhatsApp |
 
 ## GitHub
 
-El repositorio local ya está creado en la rama `main` y el remoto está
-configurado como:
+El repositorio local está en la rama `main` y el remoto configurado como:
 
 ```
 https://github.com/phylossopho/coffee-time.git
 ```
 
-Solo falta crear el repositorio vacío en <https://github.com/new> con el nombre
-`coffee-time` (público, sin README ni licencia) y subir el proyecto:
+El sitio se publica gratis con **GitHub Pages** en
+`https://phylossopho.github.io/coffee-time/` (Settings → Pages → Deploy from a
+branch, rama `main`, carpeta `/ (root)`). Como usa rutas con `#`, no necesita
+configuración extra.
+
+### Publicar cambios
+
+Haz doble clic en **`publicar-github.bat`** o ejecútalo desde la carpeta del
+proyecto:
 
 ```powershell
-git push -u origin main
+.\publicar-github.bat
 ```
 
-Para publicarlo gratis con **GitHub Pages**: Settings → Pages → Source
-"Deploy from a branch", branch `main` y carpeta `/ (root)`. Queda en
-`https://phylossopho.github.io/coffee-time/`. Como el sitio usa rutas con `#`,
-no necesita configuración extra. `.gitignore` excluye dependencias, logs y
-archivos del sistema.
+El script:
 
-Para actualizar después de un cambio:
+1. Verifica que existan Node y Git.
+2. Revisa la sintaxis de `assets/app.js` y `assets/data.js`.
+3. Muestra los archivos modificados y pide un mensaje de commit.
+4. Hace `git add`, `git commit` y `git push`.
+5. Comprueba que GitHub Pages responda con la versión nueva.
+
+Para hacerlo a mano:
 
 ```powershell
 git add .
@@ -225,7 +275,7 @@ git push
 
 ## Notas
 
-- Carrito de demostración sin backend: el pedido se cierra por WhatsApp (55 6692 2796).
+- Carrito sin backend: el pedido se cierra por WhatsApp (55 6692 2796).
 - `data.js` es la única fuente de datos; añadir un producto es agregar un objeto.
   - `variants: [["Taza chica", 43], ...]` genera selector de tamaño y precio "desde".
   - `flavors: ["Fresa", ...]` muestra los sabores disponibles como etiquetas.
@@ -234,3 +284,4 @@ git push
   - `price` se usa cuando no hay variantes.
 - El buscador filtra por nombre, descripción, categoría, sabores y tamaños.
 - El modal usa `<dialog>` nativo: cierra con Escape, clic en el fondo o el botón ✕.
+- `data.js` debe guardarse en **UTF-8 sin BOM**.

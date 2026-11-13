@@ -10,7 +10,7 @@
 
   /* Selección curada para la portada: pocos productos, no los 35. */
   const FEATURED = ["latte", "frappe-basico", "crepa-dulce", "sandwich", "soda-italiana", "ensalada"];
-  const LS = { theme: "coffeetime.theme.v1", cart: "coffeetime.cart.v1", img: "coffeetime.img.v1" };
+  const LS = { theme: "coffeetime.theme.v1", cart: "coffeetime.cart.v1", img: "coffeetime.img.v1", place: "coffeetime.place.v1" };
 
   const read = (key, fallback) => {
     try { const v = JSON.parse(localStorage.getItem(key)); return v ?? fallback; }
@@ -41,6 +41,7 @@
     theme: Object.assign(structuredClone(DEFAULT_THEME), read(LS.theme, {})),
     cart: read(LS.cart, []),
     images: read(LS.img, {}),
+    orderPlace: read(LS.place, "Para llevar"),
     query: "",
     pq: 1,
     pv: 0
@@ -80,6 +81,16 @@
   const addonsFor = p => MENU.customize.addons.filter(a => !a.cats || a.cats.includes(p.cat));
   const defaultFormat = p => p.cat === "frias" ? "vaso" : "taza";
   const needsFormat = p => p.kind === "bebida" && !(p.variants || []).some(v => /taza|vaso/i.test(v[0]));
+
+  function formatHint(p) {
+    const hasTaza = (p.variants || []).some(v => /^taza\b/i.test(v[0]));
+    const hasVaso = (p.variants || []).some(v => /^vaso\b/i.test(v[0]));
+    if (hasVaso && !hasTaza) return "Se sirve en vaso para llevar.";
+    if (hasTaza && !hasVaso) return "Se sirve en taza para aquí.";
+    if (hasTaza && hasVaso) return "Taza = para aquí · Vaso = para llevar.";
+    if (!(p.variants || []).length && needsFormat(p)) return "Taza = para aquí · Vaso = para llevar.";
+    return "";
+  }
 
   const rowKey = r => `${r.id}::${r.v ?? ""}::${(r.flavors || []).join("|")}::${(r.extras || []).map(e => `${e.id}${e.option ? "=" + e.option : ""}`).join("|")}::${r.format || ""}`;
 
@@ -134,8 +145,8 @@
       "",
       `Total: ${money(cartTotal())}`,
       "",
-      "Mi nombre es: ",
-      "Lo paso a recoger / envío a: "
+      `Lugar: ${state.orderPlace}`,
+      "Mi nombre es: "
     ].join("\n");
   };
 
@@ -230,7 +241,7 @@
 
     const body = $("#cart-body");
     if (!state.cart.length) {
-      body.innerHTML = `<div class="cart-empty"><p><strong>Tu carrito está vacío.</strong></p><p class="small">Agrega algo del menú para probar el flujo.</p></div>`;
+      body.innerHTML = `<div class="cart-empty"><p><strong>Tu carrito está vacío.</strong></p><p class="small">Agrega algo del menú para empezar tu pedido.</p></div>`;
       return;
     }
     body.innerHTML = state.cart.map(i => {
@@ -252,6 +263,20 @@
         </div>
       </div>`;
     }).join("");
+  }
+
+  function syncOrderPlace() {
+    const sel = $("#order-place");
+    if (sel) sel.value = state.orderPlace;
+  }
+
+  function buildOrderPlaces() {
+    const sel = $("#order-place");
+    if (!sel) return;
+    const places = ["Para llevar", ...(MENU.tables || [])];
+    if (!places.includes(state.orderPlace)) state.orderPlace = places[0];
+    sel.innerHTML = places.map(p => `<option value="${esc(p)}">${esc(p)}</option>`).join("");
+    syncOrderPlace();
   }
 
   /* ---------------- Drawers ---------------- */
@@ -605,7 +630,48 @@
   }
 
   function notFound() {
-    return `<div class="wrap" style="padding:80px 0"><h1>No encontrado</h1><p class="muted">Esa página no existe en el prototipo.</p><a class="btn btn-primary" href="#/">Volver al menú</a></div>`;
+    return `<div class="wrap" style="padding:80px 0"><h1>No encontrado</h1><p class="muted">Esa página no existe en el sitio.</p><a class="btn btn-primary" href="#/">Volver al menú</a></div>`;
+  }
+
+  /* ---------------- Centro QR ---------------- */
+  function qrView() {
+    const cards = [
+      { img: "assets/img/qr/menu.svg", title: "Menú completo", text: "Escanea para ver el menú, elegir y armar tu pedido." },
+      { img: "assets/img/qr/pedir.svg", title: "Pedir por WhatsApp", text: "Abre el chat con el mensaje listo para enviar." },
+      { img: "assets/img/qr/promos.svg", title: "Promociones", text: "Las promociones vigentes, siempre actualizadas." },
+      { img: "assets/img/qr/opinion.svg", title: "Tu opinión", text: "Cuéntanos cómo te fue en tu visita." },
+      { img: "assets/img/qr/club.svg", title: "Club Coffee Time", text: "Únete para recibir avisos y promociones." },
+      { img: "assets/img/qr/favoritos.svg", title: "Favoritos de la casa", text: "Vuelve directo a lo más pedido del menú." }
+    ];
+    return `<div class="wrap page-head qr-head">
+        <div class="crumbs"><a href="#/">Inicio</a> / QR y letreros</div>
+        <h1>QR y letreros</h1>
+        <p class="muted">Letreros listos para imprimir. Un mismo QR puede servir para todo el local: el cliente elige mesa al confirmar su pedido.</p>
+        <div class="qr-actions">
+          <button class="btn btn-primary" type="button" data-print>Imprimir todos</button>
+          <a class="btn btn-ghost" href="#/menu">Ver el menú</a>
+        </div>
+      </div>
+      <section class="wrap qr-grid">
+        ${cards.map(c => `<article class="qr-card">
+          <div class="qr-brand">COFFEE TIME</div>
+          <img src="${c.img}" alt="Código QR: ${esc(c.title)}" width="512" height="512" loading="lazy">
+          <h2>${esc(c.title)}</h2>
+          <p>${esc(c.text)}</p>
+          <span class="qr-scan">Escanea con la cámara</span>
+        </article>`).join("")}
+      </section>
+      <section class="wrap qr-ideas">
+        <h2>Formas creativas de usar el QR</h2>
+        <div class="qr-ideas-grid">
+          <article><h3>Un QR para dos mesas</h3><p>El mismo letrero en cada mesa. Al confirmar, el cliente elige <strong>Mesa 1</strong> o <strong>Mesa 2</strong> y el pedido llega con esa referencia.</p></article>
+          <article><h3>En el portavasos o vaso</h3><p>Un sticker con el QR de favoritos invita a volver a pedir y a conocer las promociones.</p></article>
+          <article><h3>En la cuenta o el recibo</h3><p>El QR de opinión convierte cada visita en una reseña o un comentario directo por WhatsApp.</p></article>
+          <article><h3>Promoción del día</h3><p>El QR de promociones siempre muestra lo vigente: puedes cambiar la promo sin reimprimir el letrero.</p></article>
+          <article><h3>Club Coffee Time</h3><p>El QR de lealtad abre WhatsApp con el mensaje de alta. Ideal para la barra o la caja.</p></article>
+          <article><h3>WiFi para clientes</h3><p>Cuando definas la contraseña, agrega un QR de WiFi en <code>assets/data.js</code>; se conectan sin preguntar.</p></article>
+        </div>
+      </section>`;
   }
 
   /* ---------------- Modal de personalización ---------------- */
@@ -660,7 +726,7 @@
       if (p.flavors && !custom.flavors.length) return "Elige al menos un sabor o mezcla.";
       if (p.askFlavor && !custom.flavorText.trim()) return "Escribe el sabor que deseas.";
       if (custom.extras.some(e => addonById[e.id]?.options && !e.option)) return "Elige el sabor del jarabe.";
-      return "Taza = para aquí · Vaso = para llevar.";
+      return formatHint(p);
     }
     return "";
   }
@@ -708,7 +774,7 @@
       blocks.push(`<section class="opt-block">
         <div class="opt-head">
           <h3 id="opt-size">Tamaño / formato</h3>
-          <span class="opt-hint">Taza = para aquí · Vaso = para llevar.</span>
+          <span class="opt-hint">${esc(formatHint(p))}</span>
         </div>
         ${variantGroups(p).map(g => `<div class="opt-group">
           <span class="opt-group-name">${esc(g.name)}</span>
@@ -960,6 +1026,17 @@
     }
     else if (kind === "promociones") { html = promosView(); title = "Promociones — COFFEE TIME"; }
     else if (kind === "contacto") { html = contactView(); title = "Contacto — COFFEE TIME"; }
+    else if (kind === "qr") { html = qrView(); title = "QR y letreros — COFFEE TIME"; }
+    else if (kind === "mesa") {
+      const n = Number(id);
+      const table = MENU.tables?.[n - 1];
+      if (table) {
+        state.orderPlace = table;
+        write(LS.place, state.orderPlace);
+      }
+      html = menuView();
+      title = "Menú — COFFEE TIME";
+    }
     else { html = notFound(); title = "No encontrado — COFFEE TIME"; }
 
     $("#main").innerHTML = html;
@@ -969,13 +1046,16 @@
     });
     window.scrollTo({ top: 0, behavior: "instant" });
     paintCart();
+    syncOrderPlace();
     initCarousel();
   }
 
   /* ---------------- Eventos ---------------- */
   document.addEventListener("click", e => {
-    const t = e.target.closest("[data-add],[data-add-prod],[data-inc],[data-dec],[data-remove],[data-pq],[data-pv],[data-upload],[data-close-drawer],[data-noop],[data-preset],[data-car],[data-car-to],[data-car-pause],[data-clear-query],[data-close-modal],[data-flavor],[data-addon],[data-modal-variant],[data-modal-format],[data-modal-qty],[data-modal-add]");
+    const t = e.target.closest("[data-add],[data-add-prod],[data-inc],[data-dec],[data-remove],[data-pq],[data-pv],[data-upload],[data-close-drawer],[data-noop],[data-preset],[data-car],[data-car-to],[data-car-pause],[data-clear-query],[data-close-modal],[data-flavor],[data-addon],[data-modal-variant],[data-modal-format],[data-modal-qty],[data-modal-add],[data-print]");
     if (!t) return;
+
+    if (t.matches("[data-print]")) { window.print(); return; }
 
     if (t.matches("[data-clear-query]")) {
       state.query = "";
@@ -1059,7 +1139,7 @@
 
     if (t.matches("[data-upload]")) { pickImage(t.dataset.upload); return; }
     if (t.matches("[data-close-drawer]")) { closeDrawers(); return; }
-    if (t.matches("[data-noop]")) { e.preventDefault(); toast("Enlace de demostración"); return; }
+    if (t.matches("[data-noop]")) { e.preventDefault(); toast("Enlace no disponible"); return; }
 
     if (t.matches("[data-preset]")) {
       const p = PRESETS.find(x => x.id === t.dataset.preset);
@@ -1074,6 +1154,11 @@
   });
 
   document.addEventListener("change", e => {
+    if (e.target.id === "order-place") {
+      state.orderPlace = e.target.value;
+      write(LS.place, state.orderPlace);
+      return;
+    }
     const sel = e.target.closest("[data-addon-option]");
     if (!sel) return;
     const entry = custom.extras.find(x => x.id === sel.dataset.addonOption);
@@ -1167,6 +1252,7 @@
   /* ---------------- Init ---------------- */
   buildPresets();
   applyTheme();
+  buildOrderPlaces();
   paintCart();
   window.addEventListener("hashchange", route);
   route();

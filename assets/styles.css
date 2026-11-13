@@ -1,4 +1,4 @@
-/* COFFEE TIME — prototipo. Tema por variables CSS, editable en vivo. */
+/* COFFEE TIME — estilos del sitio. Tema por variables CSS, editable en vivo. */
 
 :root {
   --primary: #b23a2f;
@@ -406,6 +406,12 @@ p { margin: 0 0 1em; }
 .drawer-foot { padding: 16px 20px 22px; border-top: 1px solid var(--line); background: var(--surface); }
 .total-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; font-size: 1rem; }
 .total-row strong { font-size: 1.25rem; }
+.order-place { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
+.order-place label { font-size: .78rem; font-weight: 700; color: var(--muted); }
+.order-place select {
+  width: 100%; border: 1px solid var(--line); background: var(--surface);
+  color: var(--ink); border-radius: 10px; padding: 9px 10px; font: inherit;
+}
 
 .cart-item { display: grid; grid-template-columns: 62px 1fr auto; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
 .cart-item img { width: 62px; height: 62px; object-fit: contain; background: var(--surface-2); border-radius: 12px; }
@@ -622,6 +628,61 @@ dialog.modal::backdrop {
 .modal-legal { margin: 8px 0 0; text-align: center; color: var(--muted); font-size: .72rem; }
 #modal-add:disabled { opacity: .45; cursor: not-allowed; transform: none; box-shadow: none; }
 
+/* ---------- Centro QR ---------- */
+.qr-head { padding-bottom: 8px; }
+.qr-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+.qr-grid {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px;
+  padding-bottom: 30px;
+}
+.qr-card {
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+  padding: 18px 18px 16px; border: 1px solid var(--line); border-radius: 16px;
+  background: var(--surface); box-shadow: var(--shadow-sm);
+}
+.qr-card img { width: min(100%, 220px); height: auto; aspect-ratio: 1; display: block; }
+.qr-brand {
+  font-size: .7rem; font-weight: 900; letter-spacing: .18em;
+  text-transform: uppercase; color: var(--primary); margin-bottom: 10px;
+}
+.qr-card h2 { font-size: 1.02rem; margin: 10px 0 4px; }
+.qr-card p { margin: 0; color: var(--muted); font-size: .82rem; line-height: 1.35; }
+.qr-scan {
+  margin-top: 10px; font-size: .68rem; font-weight: 800; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--muted);
+}
+.qr-ideas { padding: 10px 0 70px; }
+.qr-ideas h2 { font-size: 1.35rem; margin: 0 0 16px; }
+.qr-ideas-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.qr-ideas-grid article {
+  padding: 14px 16px; border-radius: 14px; background: var(--surface-2);
+  border: 1px solid var(--line);
+}
+.qr-ideas-grid h3 { font-size: .92rem; margin: 0 0 6px; }
+.qr-ideas-grid p { margin: 0; color: var(--muted); font-size: .82rem; line-height: 1.4; }
+.qr-ideas code { background: var(--surface); padding: 1px 5px; border-radius: 5px; font-size: .78rem; }
+
+@media print {
+  @page { margin: 10mm; }
+  body { background: #fff !important; color: #000 !important; }
+  .site-header, .site-footer, .skip, .bg-pattern, .qr-head, .qr-ideas,
+  .drawer, .overlay, .toast, dialog, .qr-actions { display: none !important; }
+  main { display: block !important; }
+  .qr-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 8mm;
+    padding: 0; max-width: none;
+  }
+  .qr-card {
+    break-inside: avoid; page-break-inside: avoid; border: 1px dashed #999;
+    box-shadow: none; border-radius: 10px; padding: 8mm 6mm;
+  }
+  .qr-card img { width: 55mm; }
+  .qr-card h2 { font-size: 15pt; }
+  .qr-card p { font-size: 9pt; }
+  .qr-brand { font-size: 8pt; }
+  .qr-scan { font-size: 8pt; }
+}
+
 /* ---------- Responsive ---------- */
 @media (max-width: 1180px) {
   .main-nav { gap: 0; margin-left: 2px; }
@@ -659,6 +720,11 @@ dialog.modal::backdrop {
   .card-body { padding: 12px 14px 14px; }
   .hero { padding-top: 24px; }
   .footer-inner { flex-direction: column; }
+
+  .qr-grid { grid-template-columns: 1fr; gap: 12px; }
+  .qr-card { padding: 16px 14px; }
+  .qr-card img { width: min(100%, 220px); }
+  .qr-ideas-grid { grid-template-columns: 1fr; }
 
   dialog.modal { width: calc(100% - 16px); max-height: 92vh; }
   .modal-card { max-height: 92vh; }

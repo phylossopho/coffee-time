@@ -91,7 +91,7 @@ if /i "!LOCAL!"=="!REMOTE!" (
 
 powershell -NoProfile -ExecutionPolicy Bypass -Command ^
   "$files = @('assets/app.js','assets/data.js');" ^
-  "$local = ($files | ForEach-Object { (Get-Content -Raw $_).Replace([string][char]13, '') }) -join '#';" ^
+  "$local = ($files | ForEach-Object { [Text.Encoding]::UTF8.GetString([IO.File]::ReadAllBytes($_)).Replace([string][char]13, '') }) -join '#';" ^
   "$sha = [BitConverter]::ToString([Security.Cryptography.SHA256]::Create().ComputeHash([Text.Encoding]::UTF8.GetBytes($local))).Replace('-','');" ^
   "$ok = $false;" ^
   "for ($i = 0; $i -lt 18; $i++) {" ^

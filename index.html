@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="es" data-mode="light" data-font="sans">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>COFFEE TIME — Menú</title>
+<meta name="description" content="COFFEE TIME: bebidas calientes y frías, crepas, sándwiches y promociones.">
+<link rel="stylesheet" href="assets/styles.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%23b23a2f'/%3E%3Cpath d='M10 12h10v8a4 4 0 0 1-4 4h-2a4 4 0 0 1-4-4z' fill='%23fbf6ee'/%3E%3C/svg%3E">
+</head>
+<body>
+
+<a class="skip" href="#main">Saltar al contenido</a>
+<div class="bg-pattern" aria-hidden="true"></div>
+
+<header class="site-header" id="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="#/" aria-label="COFFEE TIME, inicio">
+      <span class="brand-mark" aria-hidden="true">
+        <img src="assets/img/logo.png" alt="" width="34" height="34"
+             onerror="this.hidden=true;this.nextElementSibling.hidden=false">
+        <svg hidden viewBox="0 0 32 32" width="28" height="28"><circle cx="16" cy="16" r="15" fill="currentColor" opacity=".12"/><path d="M9 11h11v9a4 4 0 0 1-4 4h-3a4 4 0 0 1-4-4z" fill="currentColor"/><path d="M20 13h2a3 3 0 0 1 0 6h-2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 5c0 2 2 2 2 4M16 5c0 2 2 2 2 4" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>
+      </span>
+      <span class="brand-name">COFFEE&nbsp;TIME</span>
+    </a>
+
+    <nav class="main-nav" aria-label="Principal">
+      <a href="#/" data-nav="home">Inicio</a>
+      <a href="#/menu" data-nav="menu">Menú</a>
+      <a href="#/promociones">Promociones</a>
+      <a href="#/contacto">Contacto</a>
+    </nav>
+
+    <div class="header-actions">
+      <label class="search" aria-label="Buscar productos">
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16.5 16.5 21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <input type="search" id="search" placeholder="Buscar en el menú…" autocomplete="off">
+      </label>
+      <button class="icon-btn" id="theme-toggle" aria-label="Abrir editor de tema" title="Tema">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18c1.7 0 2.5-1 2.5-2 0-1.4-1-1.6-1-2.8 0-1 .8-1.7 1.9-1.7H17a4 4 0 0 0 4-4c0-4.4-4-7.5-9-7.5z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="7.5" cy="12" r="1.2" fill="currentColor"/><circle cx="10" cy="8" r="1.2" fill="currentColor"/><circle cx="14.5" cy="7.5" r="1.2" fill="currentColor"/></svg>
+      </button>
+      <button class="icon-btn cart-btn" id="cart-open" aria-label="Abrir carrito">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 5h2l2.2 10.2a2 2 0 0 0 2 1.6h7.4a2 2 0 0 0 2-1.6L21 8H7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="10" cy="20" r="1.4" fill="currentColor"/><circle cx="18" cy="20" r="1.4" fill="currentColor"/></svg>
+        <span class="badge" id="cart-count" hidden>0</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main id="main" tabindex="-1"></main>
+
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <div>
+      <strong>COFFEE TIME</strong>
+      <p class="muted">Pedidos por WhatsApp: <a href="https://wa.me/525566922796" target="_blank" rel="noopener">55 6692 2796</a></p>
+    </div>
+    <div class="footer-links">
+      <a href="#/">Inicio</a>
+      <a href="#/menu">Menú</a>
+      <a href="#/promociones">Promociones</a>
+      <a href="#/contacto">Contacto</a>
+      <a href="#" data-noop>Privacidad</a>
+    </div>
+  </div>
+</footer>
+
+<!-- Carrito -->
+<div class="overlay" id="overlay" hidden></div>
+<aside class="drawer" id="cart-drawer" aria-label="Carrito" aria-hidden="true">
+  <header class="drawer-head">
+    <h2>Tu pedido</h2>
+    <button class="icon-btn" data-close-drawer aria-label="Cerrar carrito">✕</button>
+  </header>
+  <div class="drawer-body" id="cart-body"></div>
+  <footer class="drawer-foot">
+    <div class="total-row"><span>Total</span><strong id="cart-total">$0.00</strong></div>
+    <button class="btn btn-primary btn-block" id="checkout">Confirmar pedido</button>
+    <button class="btn btn-ghost btn-block" id="cart-clear">Vaciar carrito</button>
+  </footer>
+</aside>
+
+<!-- Editor de tema -->
+<aside class="drawer drawer-theme" id="theme-drawer" aria-label="Editor de tema" aria-hidden="true">
+  <header class="drawer-head">
+    <h2>Personalizar</h2>
+    <button class="icon-btn" data-close-drawer aria-label="Cerrar editor">✕</button>
+  </header>
+  <div class="drawer-body">
+    <p class="muted small">Los cambios se aplican en vivo y se guardan en este navegador.</p>
+
+    <h3>Paletas</h3>
+    <div class="presets" id="presets"></div>
+
+    <h3>Colores</h3>
+    <div class="field-row"><label for="c-primary">Principal</label><input type="color" id="c-primary"></div>
+    <div class="field-row"><label for="c-accent">Acento</label><input type="color" id="c-accent"></div>
+    <div class="field-row"><label for="c-bg">Fondo</label><input type="color" id="c-bg"></div>
+    <div class="field-row"><label for="c-surface">Superficie</label><input type="color" id="c-surface"></div>
+    <div class="field-row"><label for="c-ink">Texto</label><input type="color" id="c-ink"></div>
+
+    <h3>Forma</h3>
+    <div class="field-row"><label for="r-radius">Redondeo</label><input type="range" id="r-radius" min="0" max="32" step="2"></div>
+    <div class="field-row"><label for="f-font">Tipografía</label>
+      <select id="f-font">
+        <option value="sans">Sans (sistema)</option>
+        <option value="serif">Serif editorial</option>
+        <option value="mono">Mono técnica</option>
+      </select>
+    </div>
+    <div class="field-row"><label for="m-dark">Modo oscuro</label><input type="checkbox" id="m-dark"></div>
+
+    <h3>Imágenes</h3>
+    <p class="muted small">Para cambiar la foto de un producto, entra a su ficha y usa "Cambiar foto de este producto".</p>
+
+    <button class="btn btn-ghost btn-block" id="theme-reset">Restablecer tema</button>
+  </div>
+</aside>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="assets/data.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>

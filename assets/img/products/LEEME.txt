@@ -1,0 +1,31 @@
+Fotos de productos
+==================
+
+Guarda aquí las fotos con el nombre del id del producto, por ejemplo:
+
+  capuccino.jpg
+  latte.jpg
+  molletes.jpg
+  ensalada.jpg
+  crepa-dulce.jpg
+
+Formato: JPG o PNG, cuadradas (mínimo 600 x 600 px), menos de 300 KB
+para que la página cargue rápido.
+
+Después, en assets/data.js, agrega el campo "photo" al producto:
+
+  { id: "capuccino", cat: "calientes", name: "Capuccino", icon: "cup",
+    photo: "assets/img/products/capuccino.jpg", ... }
+
+Mientras no exista "photo", la tarjeta usa la ilustración vectorial.
+También puedes cambiar la foto desde la ficha del producto en la página
+(botón "Cambiar foto de este producto"); esa versión se guarda solo en tu
+navegador.
+
+Ids de productos:
+  capuccino, latte, americano, mokachino, espresso, cortado, chocolate,
+  tisanas, latte-chai, matcha, chai, taro, soda-italiana, smoothie,
+  frappe-basico, frappe-especial, malteada, shaker-chai, shaker-americano,
+  shaker-capuchino, shaker-tisanas, shaker-latte, shaker-mokachino,
+  crepa-dulce, crepa-fruta, crepa-salada, croissant-rol, sandwich, chapata,
+  molletes, ensalada, extra-crepa, perlas, jarabe, portavaso

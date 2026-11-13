@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="COFFEE TIME">
+  <circle cx="32" cy="32" r="30" fill="#b23a2f"/>
+  <circle cx="32" cy="32" r="26" fill="none" stroke="#fbf6ee" stroke-opacity=".35" stroke-width="1.5"/>
+  <path d="M20 26h18v13a7 7 0 0 1-7 7h-4a7 7 0 0 1-7-7z" fill="#fbf6ee"/>
+  <path d="M38 29h3.5a5.5 5.5 0 0 1 0 11H38" fill="none" stroke="#fbf6ee" stroke-width="3.2" stroke-linecap="round"/>
+  <path d="M25 20c0-2.5 2.5-2.5 2.5-5M31 20c0-2.5 2.5-2.5 2.5-5" fill="none" stroke="#fbf6ee" stroke-width="2" stroke-linecap="round" stroke-opacity=".8"/>
+</svg>

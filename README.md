@@ -77,8 +77,9 @@ nunca sumando o restando sobre el total de las demás.
 | 3 | $70 (promo aplicada) |
 | 4 o más | $70 + $10 por cada ingrediente extra |
 
-- El modal indica cuántas crepas van (`Van 2 crepas`), el precio de **esta
-  crepa** y el **total de crepas** (por ejemplo $70 + $60 = $130).
+- El modal indica cuántas crepas van (`Van 2 crepas`) y **solo el precio de la
+  crepa actual**; el total del pedido se consulta en el carrito, sin sumar las
+  crepas anteriores dentro del modal.
 - Las crepas **no usan el selector de cantidad**: cada una se elige por
   separado. El botón principal dice **Agregar al pedido**; el **+** del carrito
   reabre este mismo modal en blanco para agregar otra crepa y vuelve a calcular
@@ -188,6 +189,8 @@ con una altura de **30vh** (`clamp(200px, 30vh, 440px)`).
   (`arma-tu-crepa-1.svg`, `-2.svg`, `-3.svg`): dulce, fruta y salada.
 - Cambia cada 5 segundos y se detiene al pasar el mouse o enfocar.
 - Tiene flechas, puntos y **deslizamiento** con el dedo o el mouse.
+- Al tocar la imagen se abre la ficha de **Arma tu crepa**; el deslizamiento no
+  dispara esa navegación.
 - La barra inferior muestra el nombre, “desde $60” y los botones **Ver ficha** y
   **Elegir ingredientes**.
 - Las demás categorías siguen mostrando tarjetas en cuadrícula.
@@ -204,15 +207,20 @@ enfocar, y tiene flechas, puntos, botón de pausa (❙❙ / ▶) y **deslizamien
 con el dedo o el mouse. Cada slide tiene su botón **Pedir** que abre WhatsApp
 con esa promo.
 
+Al tocar la imagen se abre la ficha del producto relacionado (`productId`); si
+la promo no tiene uno, lleva a `#/promociones`.
+
 El alto se adapta a la pantalla con `clamp(300px, 44vh, 450px)` y el póster se
 muestra completo (`object-fit: contain`) sobre un fondo desenfocado del mismo
 arte, así no se recorta en pantallas pequeñas.
 
 ```js
-{ id: "p1", hero: true, title: "Capuchino grande + sándwich", price: 100, /* ... */ }
+{ id: "p1", hero: true, title: "Capuchino grande + sándwich", price: 100,
+  productId: "capuccino", /* ... */ }
 ```
 
-Para sumar una promo al carrusel: agrega su imagen y ponle `hero: true`.
+Para sumar una promo al carrusel: agrega su imagen, ponle `hero: true` y, si
+aplica, un `productId` para que la imagen abra esa ficha.
 
 ## Imágenes
 

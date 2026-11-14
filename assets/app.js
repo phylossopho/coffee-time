@@ -138,7 +138,6 @@
   /* Las crepas se cotizan una por una: cada línea vale según sus propios ingredientes. */
   const cartCrepaRows = () => state.cart.filter(r => byId[r.id]?.kind === "crepa");
   const cartCrepaCount = () => cartCrepaRows().reduce((n, r) => n + r.qty, 0);
-  const cartCrepaTotal = () => cartCrepaRows().reduce((n, r) => n + rowPrice(r) * r.qty, 0);
   const crepaCounter = n => n === 1 ? "Va 1 crepa" : `Van ${n} crepas`;
 
   /* ---------------- WhatsApp ---------------- */
@@ -321,12 +320,18 @@
       <div class="hero-media carousel" id="hero-carousel" role="region"
            aria-roledescription="carrusel" aria-label="Promociones destacadas">
         <div class="car-track">
-          ${list.map((p, i) => `<div class="car-slide${i === 0 ? " is-active" : ""}" data-slide="${i}"
+          ${list.map((p, i) => {
+            const href = p.productId && byId[p.productId] ? `#/producto/${p.productId}` : "#/promociones";
+            return `<div class="car-slide${i === 0 ? " is-active" : ""}" data-slide="${i}"
                aria-hidden="${i === 0 ? "false" : "true"}">
-            <div class="car-bg" aria-hidden="true" style="background-image:url('${p.img}')"></div>
-            <img src="${promoImg(p)}" alt="${esc(p.title)}" decoding="async" ${i === 0 ? 'fetchpriority="high"' : ""}
-                 onerror="this.onerror=null;this.src='${promoFallback(p)}'">
-          </div>`).join("")}
+              <a class="car-slide-link" href="${href}" tabindex="${i === 0 ? "0" : "-1"}"
+                 aria-label="Ver ${esc(p.title)}">
+                <div class="car-bg" aria-hidden="true" style="background-image:url('${p.img}')"></div>
+                <img src="${promoImg(p)}" alt="${esc(p.title)}" decoding="async" ${i === 0 ? 'fetchpriority="high"' : ""}
+                     onerror="this.onerror=null;this.src='${promoFallback(p)}'">
+              </a>
+            </div>`;
+          }).join("")}
         </div>
         <button class="car-btn car-prev" type="button" data-car="prev" aria-label="Promoción anterior">‹</button>
         <button class="car-btn car-next" type="button" data-car="next" aria-label="Promoción siguiente">›</button>
@@ -546,8 +551,11 @@
           ${slides.map((s, i) => `<div class="car-slide${i === 0 ? " is-active" : ""}" data-slide="${i}"
                data-crepa-product="${s.pi}" data-crepa-view="${s.si}"
                aria-hidden="${i === 0 ? "false" : "true"}">
-            <div class="car-bg" aria-hidden="true" style="background-image:url('${s.src}')"></div>
-            <img src="${s.src}" alt="${esc(s.p.name)} — vista ${s.si + 1}" decoding="async">
+            <a class="car-slide-link" href="#/producto/${s.p.id}" tabindex="${i === 0 ? "0" : "-1"}"
+               aria-label="Ver ficha de ${esc(s.p.name)}">
+              <div class="car-bg" aria-hidden="true" style="background-image:url('${s.src}')"></div>
+              <img src="${s.src}" alt="${esc(s.p.name)} — vista ${s.si + 1}" decoding="async">
+            </a>
           </div>`).join("")}
         </div>
         ${multi ? `<button class="car-btn car-prev" type="button" data-crepa-car="prev" aria-label="Vista anterior">‹</button>
@@ -889,23 +897,25 @@
         <p class="promo-note" id="modal-note" aria-live="polite"></p>
       </div>
       <footer class="modal-foot">
-        <div class="modal-sum">
-          ${isCrepa ? `<div class="modal-qty">
+        ${isCrepa ? `<div class="modal-sum modal-sum-crepa">
+          <div class="modal-total">
             <span>Esta crepa</span>
             <strong id="modal-unit" aria-live="polite">${money(customUnitPrice())}</strong>
-          </div>` : `<div class="modal-qty">
+          </div>
+        </div>` : `<div class="modal-sum">
+          <div class="modal-qty">
             <span>Cantidad</span>
             <div class="qty">
               <button type="button" data-modal-qty="-1" aria-label="Menos">−</button>
               <output id="modal-qty">${custom.qty}</output>
               <button type="button" data-modal-qty="1" aria-label="Más">+</button>
             </div>
-          </div>`}
-          <div class="modal-total">
-            <span>${isCrepa ? "Total de crepas" : "Total"}</span>
-            <strong id="modal-total" aria-live="polite">${money(isCrepa ? cartCrepaTotal() + customUnitPrice() : customUnitPrice() * custom.qty)}</strong>
           </div>
-        </div>
+          <div class="modal-total">
+            <span>Total</span>
+            <strong id="modal-total" aria-live="polite">${money(customUnitPrice() * custom.qty)}</strong>
+          </div>
+        </div>`}
         <button class="btn btn-primary btn-block" type="button" data-modal-add id="modal-add">Agregar al pedido</button>
         <div class="modal-secondary">
           ${isCrepa ? `<button class="btn btn-ghost" type="button" data-modal-more-crepa>+ Otra crepa</button>` : ""}
@@ -955,7 +965,7 @@
     const unitOut = $("#modal-unit", dlg);
     if (unitOut) unitOut.textContent = money(customUnitPrice());
     const total = $("#modal-total", dlg);
-    if (total) total.textContent = money(p.kind === "crepa" ? cartCrepaTotal() + customUnitPrice() : customUnitPrice() * custom.qty);
+    if (total) total.textContent = money(customUnitPrice() * custom.qty);
     const note = $("#modal-note", dlg);
     if (note) note.textContent = customNote(p);
     const add = $("#modal-add", dlg);
@@ -1123,7 +1133,7 @@
 
   /* Deslizamiento con el dedo o el mouse (flechas y puntos siguen funcionando). */
   function addSwipe(el, onNext, onPrev) {
-    let x0 = null, y0 = 0;
+    let x0 = null, y0 = 0, swiped = false;
     el.addEventListener("pointerdown", e => {
       if (e.pointerType === "mouse" && e.button !== 0) return;
       x0 = e.clientX;
@@ -1136,9 +1146,15 @@
       const dy = e.clientY - y0;
       x0 = null;
       if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy) * 1.2) return;
+      /* Evita que el deslizamiento termine abriendo la ficha del producto. */
+      swiped = true;
+      setTimeout(() => { swiped = false; }, 350);
       if (dx < 0) onNext(); else onPrev();
     });
     el.addEventListener("pointercancel", () => { x0 = null; });
+    el.addEventListener("click", e => {
+      if (swiped) e.preventDefault();
+    }, true);
   }
 
   function initCarousel() {
@@ -1161,6 +1177,8 @@
       slides.forEach((s, k) => {
         s.classList.toggle("is-active", k === carIndex);
         s.setAttribute("aria-hidden", String(k !== carIndex));
+        const link = $(".car-slide-link", s);
+        if (link) link.tabIndex = k === carIndex ? 0 : -1;
       });
       dots.forEach((d, k) => {
         d.classList.toggle("is-active", k === carIndex);
@@ -1212,6 +1230,8 @@
       slides.forEach((s, k) => {
         s.classList.toggle("is-active", k === crepaIndex);
         s.setAttribute("aria-hidden", String(k !== crepaIndex));
+        const link = $(".car-slide-link", s);
+        if (link) link.tabIndex = k === crepaIndex ? 0 : -1;
       });
       dots.forEach((d, k) => {
         d.classList.toggle("is-active", k === crepaIndex);

@@ -43,7 +43,7 @@ window.MENU = {
 
   /* CONFIG Personalización de productos (crepas, bebidas y sabores)
      kind: "crepa"   → modal con ingredientes mezclables y precio por cantidad.
-     kind: "bebida"  → modal con sabor/mezcla, tamaño/formato y extras.
+     kind: "bebida"  → modal con sabor, tamaño/formato y extras.
      kind: "sabor"   → modal solo para elegir sabor (croissant, por ejemplo).
      Sin kind: se agrega directo al carrito. */
   customize: {

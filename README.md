@@ -79,8 +79,9 @@ customize: {
 
 ### Bebidas (`kind: "bebida"`)
 
-- **Sabor o mezcla:** si el producto tiene `flavors`, hay que elegir al menos
-  uno; se permiten varios sin costo extra.
+- **Sabor:** si el producto tiene `flavors`, hay que elegir **un solo sabor**;
+  el modal lo marca como selección única (sin costo extra) y el resto de
+  opciones se desmarca al elegir otra.
 - **Tisanas y Shaker Tisanas:** usan `askFlavor: true` y piden escribir el
   sabor, porque su lista real aún no está definida.
 - **Tamaño y formato:** si las variantes ya dicen *Taza* / *Vaso*, se agrupan
@@ -197,6 +198,11 @@ propio botón **Pedir** con el texto de esa promoción.
 
 Las líneas del carrito se separan por producto, variante, sabores, extras y
 formato: dos cafés iguales con distinto jarabe quedan como dos líneas.
+
+En el carrito, el botón **+** de una bebida con sabores (frappé básico,
+smoothie, malteada, soda italiana, shakers…) vuelve a abrir el modal y espera a
+que se elija el sabor de la nueva pieza. Se agrega como línea aparte y el total
+del carrito suma ambas selecciones.
 
 ## Contacto
 

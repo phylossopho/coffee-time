@@ -544,7 +544,7 @@
     if (p.kind === "bebida") {
       return `<div class="custom-summary">
         <strong>Personaliza tu bebida</strong>
-        <p>Elige ${p.flavors || p.askFlavor ? "sabor o mezcla, " : ""}tamaño/formato y extras en el siguiente paso.</p>
+        <p>Elige ${p.flavors || p.askFlavor ? "sabor, " : ""}tamaño/formato y extras en el siguiente paso.</p>
       </div>`;
     }
     return `<div class="custom-summary">
@@ -706,7 +706,7 @@
 
   function customMissing(p) {
     if (p.kind === "crepa" && !custom.flavors.length) return "Elige al menos un ingrediente";
-    if (p.flavors && !custom.flavors.length) return "Elige al menos un sabor";
+    if (p.flavors && !custom.flavors.length) return "Elige un sabor";
     if (p.askFlavor && !custom.flavorText.trim()) return "Escribe el sabor que deseas";
     if (custom.extras.some(e => addonById[e.id]?.options && !e.option)) return "Elige el sabor del jarabe";
     return "";
@@ -723,7 +723,7 @@
       return `${n} ingredientes: ${money(total)}. Cada ingrediente después de 3 cuesta ${money(crepaCfg.extra)}.`;
     }
     if (p.kind === "bebida") {
-      if (p.flavors && !custom.flavors.length) return "Elige al menos un sabor o mezcla.";
+      if (p.flavors && !custom.flavors.length) return "Elige un sabor.";
       if (p.askFlavor && !custom.flavorText.trim()) return "Escribe el sabor que deseas.";
       if (custom.extras.some(e => addonById[e.id]?.options && !e.option)) return "Elige el sabor del jarabe.";
       return formatHint(p);
@@ -751,8 +751,7 @@
     } else if (p.flavors) {
       blocks.push(`<section class="opt-block">
         <div class="opt-head">
-          <h3 id="opt-flavors">Sabor o mezcla</h3>
-          <span class="opt-hint">Elige uno o varios.</span>
+          <h3 id="opt-flavors">Sabor</h3>
         </div>
         <div class="opt-chips">
           ${p.flavors.map(f => `<button class="opt-chip" type="button" data-flavor="${esc(f)}" aria-pressed="false">${esc(f)}</button>`).join("")}
@@ -913,7 +912,7 @@
     custom.kind = p.kind;
     custom.variant = p.variants ? (opts.variant ?? 0) : null;
     custom.qty = Math.max(1, Math.min(20, opts.qty || 1));
-    custom.format = needsFormat(p) ? defaultFormat(p) : "";
+    custom.format = needsFormat(p) ? (opts.format || defaultFormat(p)) : "";
     custom.flavors = [];
     custom.flavorText = "";
     custom.extras = [];
@@ -1092,8 +1091,14 @@
     if (t.matches("[data-close-modal]")) { closeCustom(); return; }
     if (t.matches("[data-flavor]")) {
       const f = t.dataset.flavor;
-      const i = custom.flavors.indexOf(f);
-      if (i >= 0) custom.flavors.splice(i, 1); else custom.flavors.push(f);
+      const p = byId[custom.productId];
+      if (p?.kind === "crepa") {
+        const i = custom.flavors.indexOf(f);
+        if (i >= 0) custom.flavors.splice(i, 1); else custom.flavors.push(f);
+      } else {
+        /* Bebidas y productos de un sabor: una sola selección. */
+        custom.flavors = [f];
+      }
       syncCustom();
       return;
     }
@@ -1113,7 +1118,18 @@
       return;
     }
 
-    if (t.matches("[data-inc]")) { const r = state.cart.find(i => rowKey(i) === t.dataset.inc); if (r) setQty(t.dataset.inc, r.qty + 1); return; }
+    if (t.matches("[data-inc]")) {
+      const r = state.cart.find(i => rowKey(i) === t.dataset.inc);
+      if (!r) return;
+      const p = byId[r.id];
+      /* Bebidas con sabor: reabre el modal para elegir el sabor de la nueva pieza. */
+      if (p && p.kind !== "crepa" && (p.flavors || p.askFlavor)) {
+        openCustom(p.id, { qty: 1, variant: r.v, format: r.format });
+        return;
+      }
+      setQty(t.dataset.inc, r.qty + 1);
+      return;
+    }
     if (t.matches("[data-dec]")) { const r = state.cart.find(i => rowKey(i) === t.dataset.dec); if (r) setQty(t.dataset.dec, r.qty - 1); return; }
     if (t.matches("[data-remove]")) { setQty(t.dataset.remove, 0); return; }
 

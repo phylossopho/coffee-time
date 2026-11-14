@@ -37,7 +37,7 @@ window.MENU = {
     { id: "calientes", name: "Bebidas calientes", icon: "cup",      blurb: "Café, chocolate, tisanas y especialidades." },
     { id: "frias",     name: "Bebidas frías",     icon: "iced",     blurb: "Sodas, smoothies, frappés, malteadas y shakers." },
     { id: "crepas",    name: "Crepas",            icon: "crepe",    blurb: "Dulces, de fruta o saladas. Un ingrediente incluido." },
-    { id: "comida",    name: "Comida",            icon: "food",     blurb: "Sándwich, chapata, molletes y ensalada." },
+    { id: "comida",    name: "Comida y otros",    icon: "food",     blurb: "Sándwich, chapata, molletes, ensalada y otros antojos." },
     { id: "extras",    name: "Extras",            icon: "beans",    blurb: "Para personalizar tu bebida o tu crepa." }
   ],
 
@@ -182,12 +182,8 @@ window.MENU = {
       desc: "Un ingrediente incluido. Cada extra cuesta $10.", price: 60,
       photo: "assets/img/productos/crepa-salada.webp",
       flavors: ["Jamón", "Pepperoni", "Queso crema", "Queso manchego"] },
-    { id: "croissant-rol", cat: "crepas", kind: "sabor", name: "Croissant rol", icon: "food", tag: "WhatsApp",
-      desc: "Relleno de crema pastelera o crema de avellana. Solo por pedido.", price: 50,
-      photo: "assets/img/productos/croissant-rol.webp",
-      flavors: ["Crema pastelera", "Crema de avellana"] },
 
-    /* ---------------- Comida ---------------- */
+    /* ---------------- Comida y otros ---------------- */
     { id: "sandwich", cat: "comida", name: "Sándwich", icon: "food", tag: "",
       desc: "Pan de caja tostado con jamón, queso y vegetales.", price: 60,
       photo: "assets/img/productos/sandwich.webp" },
@@ -201,6 +197,10 @@ window.MENU = {
     { id: "ensalada", cat: "comida", name: "Ensalada", icon: "salad", tag: "$100",
       desc: "Pechuga empanizada, lechuga, zanahoria, pepino, nuez, fresa, pasta y ajonjolí.", price: 100,
       photo: "assets/img/productos/ensalada.webp" },
+    { id: "croissant-rol", cat: "comida", kind: "sabor", name: "Croissant rol", icon: "food", tag: "WhatsApp",
+      desc: "Relleno de crema pastelera o crema de avellana. Solo por pedido.", price: 50,
+      photo: "assets/img/productos/croissant-rol.webp",
+      flavors: ["Crema pastelera", "Crema de avellana"] },
 
     /* ---------------- Extras ---------------- */
     { id: "extra-crepa", cat: "extras", name: "Ingrediente extra para crepa", icon: "crepe", tag: "",

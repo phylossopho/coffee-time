@@ -61,12 +61,24 @@ el producto se agrega directo al carrito.
 El modal muestra los ingredientes agrupados en **Dulce**, **Fruta** y
 **Salada**, y se pueden mezclar entre grupos.
 
+**Cada crepa se cotiza aparte.** El carrito guarda una línea por crepa con sus
+propios ingredientes y el precio se calcula siempre desde la base de esa crepa,
+nunca sumando o restando sobre el total de las demás.
+
 | Ingredientes | Precio |
 |---|---|
 | 1 | $60 |
 | 2 | $70 (avisa que el tercero va incluido) |
 | 3 | $70 (promo aplicada) |
 | 4 o más | $70 + $10 por cada ingrediente extra |
+
+- El modal indica cuántas crepas van (`Van 2 crepas`), el precio de **esta
+  crepa** y el **total de crepas** (por ejemplo $70 + $60 = $130).
+- Las crepas **no usan el selector de cantidad**: cada una se elige por
+  separado. Al agregar otra desde el carrito con **+**, el modal se reabre en
+  blanco y vuelve a calcular desde $60.
+- Si dos crepas quedan con los mismos ingredientes, se agrupan en una línea con
+  cantidad 2 y se cobran como 2 × su precio.
 
 El precio de 4 o más ingredientes es **provisional**: está configurado en
 `MENU.customize.crepa` y falta confirmarlo con el dueño del negocio.
@@ -105,6 +117,10 @@ por ahora.
 `kind: "sabor"` (por ejemplo, el croissant rol) abre un modal para elegir un
 solo sabor, sin tamaño ni extras.
 
+El **Croissant rol** ya no está en Crepas: vive en la categoría **Comida y
+otros** (`cat: "comida"`), junto con sándwich, chapata, molletes y ensalada. Ahí
+puedes ir sumando productos que no encajen en las demás categorías.
+
 ## Mesas, QR y letreros
 
 El local maneja dos mesas. `MENU.tables` en `assets/data.js` define sus nombres:
@@ -139,12 +155,28 @@ seleccionada. Sirve si más adelante quieren un QR por mesa.
 **Pendiente:** el QR de WiFi se agrega cuando exista la contraseña real
 (`MENU.qr.wifi.password`, hoy vacío).
 
+## Carrusel de crepas
+
+La vista `#/categoria/crepas` no usa cuadrícula: muestra un **carrusel de una
+imagen a la vez** con las crepas del menú (hoy tres), al **90% del ancho de la
+pantalla** y con una altura de **30vh** (`clamp(200px, 30vh, 440px)`).
+
+- Rota automáticamente cada 5 segundos y se detiene al pasar el mouse o enfocar.
+- Tiene flechas, puntos y **deslizamiento** con el dedo o el mouse.
+- Cada slide muestra el nombre, “desde $60” y los botones **Ver ficha** y
+  **Elegir ingredientes**.
+- Las demás categorías siguen mostrando tarjetas en cuadrícula.
+
+Las fotos reales de las crepas (`assets/img/productos/crepa-*.webp`) siguen
+pendientes; mientras no existan se usa la ilustración `crepe.svg`.
+
 ## Carrusel de promociones
 
 La portada muestra un carrusel con las promociones marcadas con `hero: true` en
 `assets/data.js`. Cambia solo cada 5 segundos, se detiene al pasar el mouse o
-enfocar, y tiene flechas, puntos y botón de pausa (❙❙ / ▶). Cada slide tiene su
-botón **Pedir** que abre WhatsApp con esa promo.
+enfocar, y tiene flechas, puntos, botón de pausa (❙❙ / ▶) y **deslizamiento**
+con el dedo o el mouse. Cada slide tiene su botón **Pedir** que abre WhatsApp
+con esa promo.
 
 El alto se adapta a la pantalla con `clamp(300px, 44vh, 450px)` y el póster se
 muestra completo (`object-fit: contain`) sobre un fondo desenfocado del mismo

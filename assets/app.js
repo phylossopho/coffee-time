@@ -130,6 +130,12 @@
     return out;
   }
 
+  /* Las crepas se cotizan una por una: cada línea vale según sus propios ingredientes. */
+  const cartCrepaRows = () => state.cart.filter(r => byId[r.id]?.kind === "crepa");
+  const cartCrepaCount = () => cartCrepaRows().reduce((n, r) => n + r.qty, 0);
+  const cartCrepaTotal = () => cartCrepaRows().reduce((n, r) => n + rowPrice(r) * r.qty, 0);
+  const crepaCounter = n => n === 1 ? "Va 1 crepa" : `Van ${n} crepas`;
+
   /* ---------------- WhatsApp ---------------- */
   const waLink = text => `${MENU.whatsapp}?text=${encodeURIComponent(text)}`;
   const orderMessage = () => {
@@ -521,6 +527,39 @@
     ${grid(list)}`;
   }
 
+  function crepaCarousel(list) {
+    const first = list[0];
+    return `<section class="crepa-wrap" aria-label="Crepas">
+      <div class="hero-media carousel crepa-carousel" id="crepa-carousel" role="region"
+           aria-roledescription="carrusel" aria-label="Crepas">
+        <div class="car-track">
+          ${list.map((p, i) => `<div class="car-slide${i === 0 ? " is-active" : ""}" data-slide="${i}"
+               aria-hidden="${i === 0 ? "false" : "true"}">
+            <div class="car-bg" aria-hidden="true" style="background-image:url('${imgFor(p)}')"></div>
+            <img src="${imgFor(p)}" alt="${esc(p.name)}" decoding="async" onerror="${imgOnError(p)}">
+          </div>`).join("")}
+        </div>
+        <button class="car-btn car-prev" type="button" data-crepa-car="prev" aria-label="Crepa anterior">‹</button>
+        <button class="car-btn car-next" type="button" data-crepa-car="next" aria-label="Crepa siguiente">›</button>
+      </div>
+      <div class="car-dots" role="group" aria-label="Elegir crepa">
+        ${list.map((p, i) => `<button class="car-dot${i === 0 ? " is-active" : ""}" type="button"
+             data-crepa-to="${i}" aria-label="${esc(p.name)}"
+             aria-current="${i === 0 ? "true" : "false"}"></button>`).join("")}
+      </div>
+      <div class="car-bar crepa-bar">
+        <div class="car-info">
+          <strong id="crepa-title"><a href="#/producto/${first.id}">${esc(first.name)}</a></strong>
+          <span class="car-price" id="crepa-price">${priceLabel(first)}</span>
+        </div>
+        <div class="car-actions">
+          <a class="btn btn-ghost btn-sm" id="crepa-link" href="#/producto/${first.id}">Ver ficha</a>
+          <button class="btn btn-primary btn-sm" type="button" id="crepa-add" data-add="${first.id}">Elegir ingredientes</button>
+        </div>
+      </div>
+    </section>`;
+  }
+
   function categoryView(id) {
     const c = catById[id];
     if (!c) return notFound();
@@ -531,14 +570,14 @@
         <p class="muted">${esc(c.blurb)}</p>
       </div>
       ${chips()}
-      ${grid(list)}`;
+      ${id === "crepas" && list.length ? crepaCarousel(list) : grid(list)}`;
   }
 
   function customSummary(p) {
     if (p.kind === "crepa") {
       return `<div class="custom-summary">
         <strong>Elige tus ingredientes</strong>
-        <p>Puedes mezclar dulce, fruta y salada. 1 ingrediente = ${money(crepaCfg.base)} · 3 ingredientes = ${money(crepaCfg.promoPrice)}.</p>
+        <p>Puedes mezclar dulce, fruta y salada. Cada crepa se cotiza aparte: 1 ingrediente = ${money(crepaCfg.base)} · 3 ingredientes = ${money(crepaCfg.promoPrice)}.</p>
       </div>`;
     }
     if (p.kind === "bebida") {
@@ -587,12 +626,12 @@
 
           <div class="product-price" id="prod-price">${modalKind ? priceLabel(p) : money(price)}</div>
           <div class="product-actions">
-            <div class="qty">
+            ${p.kind === "crepa" ? "" : `<div class="qty">
               <button data-pq="-1" aria-label="Menos">−</button>
               <output id="pq">${state.pq}</output>
               <button data-pq="1" aria-label="Más">+</button>
-            </div>
-            <button class="btn btn-primary" data-add-prod="${p.id}">${modalKind ? "Elegir opciones" : `Agregar ${state.pq} al pedido`}</button>
+            </div>`}
+            <button class="btn btn-primary" data-add-prod="${p.id}">${modalKind ? (p.kind === "crepa" ? "Elegir ingredientes" : "Elegir opciones") : `Agregar ${state.pq} al pedido`}</button>
           </div>
           <div class="meta">
             <div><strong>Categoría</strong>${esc(c.name)}</div>
@@ -734,6 +773,8 @@
   function customMarkup(p) {
     const kind = p.kind;
     const blocks = [];
+    const isCrepa = kind === "crepa";
+    const crepaN = isCrepa ? cartCrepaCount() + 1 : 0;
 
     if (kind === "crepa") {
       blocks.push(`<section class="opt-block">
@@ -827,6 +868,7 @@
           <div>
             <h2 id="modal-title">${esc(p.name)}</h2>
             <p>${esc(p.desc)}</p>
+            ${isCrepa ? `<p class="crepa-count" id="crepa-count">${crepaCounter(crepaN)}</p>` : ""}
           </div>
         </div>
         <button class="icon-btn" type="button" data-close-modal aria-label="Cerrar">✕</button>
@@ -837,17 +879,23 @@
       </div>
       <footer class="modal-foot">
         <div class="modal-sum">
-          <div class="modal-qty">
+          ${isCrepa ? `<div class="modal-qty">
+            <span>Esta crepa</span>
+            <strong id="modal-unit" aria-live="polite">${money(customUnitPrice())}</strong>
+          </div>` : `<div class="modal-qty">
             <span>Cantidad</span>
             <div class="qty">
               <button type="button" data-modal-qty="-1" aria-label="Menos">−</button>
               <output id="modal-qty">${custom.qty}</output>
               <button type="button" data-modal-qty="1" aria-label="Más">+</button>
             </div>
+          </div>`}
+          <div class="modal-total">
+            <span>${isCrepa ? "Total de crepas" : "Total"}</span>
+            <strong id="modal-total" aria-live="polite">${money(isCrepa ? cartCrepaTotal() + customUnitPrice() : customUnitPrice() * custom.qty)}</strong>
           </div>
-          <div class="modal-total"><span>Total</span><strong id="modal-total" aria-live="polite">${money(customUnitPrice() * custom.qty)}</strong></div>
         </div>
-        <button class="btn btn-primary btn-block" type="button" data-modal-add id="modal-add">Agregar al pedido</button>
+        <button class="btn btn-primary btn-block" type="button" data-modal-add id="modal-add">${isCrepa ? `Agregar crepa ${crepaN}` : "Agregar al pedido"}</button>
         <p class="modal-legal">Precios en pesos · el pedido se confirma por WhatsApp.</p>
       </footer>
     </div>`;
@@ -889,8 +937,10 @@
 
     const qtyOut = $("#modal-qty", dlg);
     if (qtyOut) qtyOut.textContent = custom.qty;
+    const unitOut = $("#modal-unit", dlg);
+    if (unitOut) unitOut.textContent = money(customUnitPrice());
     const total = $("#modal-total", dlg);
-    if (total) total.textContent = money(customUnitPrice() * custom.qty);
+    if (total) total.textContent = money(p.kind === "crepa" ? cartCrepaTotal() + customUnitPrice() : customUnitPrice() * custom.qty);
     const note = $("#modal-note", dlg);
     if (note) note.textContent = customNote(p);
     const add = $("#modal-add", dlg);
@@ -911,7 +961,7 @@
     custom.productId = id;
     custom.kind = p.kind;
     custom.variant = p.variants ? (opts.variant ?? 0) : null;
-    custom.qty = Math.max(1, Math.min(20, opts.qty || 1));
+    custom.qty = p.kind === "crepa" ? 1 : Math.max(1, Math.min(20, opts.qty || 1));
     custom.format = needsFormat(p) ? (opts.format || defaultFormat(p)) : "";
     custom.flavors = [];
     custom.flavorText = "";
@@ -936,7 +986,7 @@
     const missing = customMissing(p);
     if (missing) { toast(missing); return; }
     const flavors = p.askFlavor && !p.flavors ? [custom.flavorText.trim()] : [...custom.flavors];
-    addToCart(p.id, custom.qty, custom.variant, {
+    addToCart(p.id, p.kind === "crepa" ? 1 : custom.qty, custom.variant, {
       kind: p.kind,
       flavors,
       extras: custom.extras.map(e => ({ id: e.id, option: e.option || "" })),
@@ -945,12 +995,36 @@
     closeCustom();
   }
 
-  /* ---------------- Carrusel de promociones ---------------- */
+  /* ---------------- Carruseles ---------------- */
   let carTimer = null;
   let carIndex = 0;
   let carPaused = false;
   let carShow = null;
   let carStart = null;
+  let crepaTimer = null;
+  let crepaIndex = 0;
+  let crepaShow = null;
+  let crepaStart = null;
+
+  /* Deslizamiento con el dedo o el mouse (flechas y puntos siguen funcionando). */
+  function addSwipe(el, onNext, onPrev) {
+    let x0 = null, y0 = 0;
+    el.addEventListener("pointerdown", e => {
+      if (e.pointerType === "mouse" && e.button !== 0) return;
+      x0 = e.clientX;
+      y0 = e.clientY;
+      try { el.setPointerCapture(e.pointerId); } catch { /* sin captura */ }
+    });
+    el.addEventListener("pointerup", e => {
+      if (x0 == null) return;
+      const dx = e.clientX - x0;
+      const dy = e.clientY - y0;
+      x0 = null;
+      if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy) * 1.2) return;
+      if (dx < 0) onNext(); else onPrev();
+    });
+    el.addEventListener("pointercancel", () => { x0 = null; });
+  }
 
   function initCarousel() {
     clearInterval(carTimer);
@@ -964,7 +1038,7 @@
     const region = root.closest(".hero-side") || root;
     const list = MENU.promos.filter(p => p.hero);
     const slides = $$(".car-slide", root);
-    const dots = $$(".car-dot");
+    const dots = $$(".car-dot", region);
     if (slides.length < 2) return;
 
     const show = n => {
@@ -997,14 +1071,75 @@
     region.addEventListener("mouseleave", start);
     region.addEventListener("focusin", stop);
     region.addEventListener("focusout", start);
+    addSwipe(root, () => carShow?.(carIndex + 1), () => carShow?.(carIndex - 1));
+
+    show(0);
+    start();
+  }
+
+  /* Carrusel de crepas: una imagen a la vez, rotando entre las crepas del menú. */
+  function initCrepaCarousel() {
+    clearInterval(crepaTimer);
+    crepaTimer = null;
+    crepaShow = null;
+    crepaStart = null;
+
+    const root = $("#crepa-carousel");
+    if (!root) return;
+    const wrap = root.parentElement;
+    const list = filtered("crepas");
+    const slides = $$(".car-slide", root);
+    const dots = $$(".car-dot", wrap);
+    if (!slides.length) return;
+
+    const show = n => {
+      crepaIndex = (n + slides.length) % slides.length;
+      slides.forEach((s, k) => {
+        s.classList.toggle("is-active", k === crepaIndex);
+        s.setAttribute("aria-hidden", String(k !== crepaIndex));
+      });
+      dots.forEach((d, k) => {
+        d.classList.toggle("is-active", k === crepaIndex);
+        d.setAttribute("aria-current", String(k === crepaIndex));
+      });
+      const p = list[crepaIndex];
+      if (!p) return;
+      const title = $("#crepa-title");
+      const price = $("#crepa-price");
+      const link = $("#crepa-link");
+      const add = $("#crepa-add");
+      if (title) title.innerHTML = `<a href="#/producto/${p.id}">${esc(p.name)}</a>`;
+      if (price) price.textContent = priceLabel(p);
+      if (link) link.href = `#/producto/${p.id}`;
+      if (add) add.dataset.add = p.id;
+    };
+    const stop = () => { clearInterval(crepaTimer); crepaTimer = null; };
+    const start = () => {
+      stop();
+      if (!document.hidden) crepaTimer = setInterval(() => show(crepaIndex + 1), 5000);
+    };
+
+    crepaShow = n => { show(n); start(); };
+    crepaStart = start;
+
+    root.addEventListener("mouseenter", stop);
+    root.addEventListener("mouseleave", start);
+    root.addEventListener("focusin", stop);
+    root.addEventListener("focusout", start);
+    addSwipe(root, () => crepaShow?.(crepaIndex + 1), () => crepaShow?.(crepaIndex - 1));
 
     show(0);
     start();
   }
 
   document.addEventListener("visibilitychange", () => {
-    if (document.hidden) clearInterval(carTimer);
-    else carStart?.();
+    if (document.hidden) {
+      clearInterval(carTimer);
+      clearInterval(crepaTimer);
+    } else {
+      carStart?.();
+      crepaStart?.();
+    }
   });
 
   /* ---------------- Router ---------------- */
@@ -1047,11 +1182,12 @@
     paintCart();
     syncOrderPlace();
     initCarousel();
+    initCrepaCarousel();
   }
 
   /* ---------------- Eventos ---------------- */
   document.addEventListener("click", e => {
-    const t = e.target.closest("[data-add],[data-add-prod],[data-inc],[data-dec],[data-remove],[data-pq],[data-pv],[data-upload],[data-close-drawer],[data-noop],[data-preset],[data-car],[data-car-to],[data-car-pause],[data-clear-query],[data-close-modal],[data-flavor],[data-addon],[data-modal-variant],[data-modal-format],[data-modal-qty],[data-modal-add],[data-print]");
+    const t = e.target.closest("[data-add],[data-add-prod],[data-inc],[data-dec],[data-remove],[data-pq],[data-pv],[data-upload],[data-close-drawer],[data-noop],[data-preset],[data-car],[data-car-to],[data-car-pause],[data-crepa-car],[data-crepa-to],[data-clear-query],[data-close-modal],[data-flavor],[data-addon],[data-modal-variant],[data-modal-format],[data-modal-qty],[data-modal-add],[data-print]");
     if (!t) return;
 
     if (t.matches("[data-print]")) { window.print(); return; }
@@ -1066,6 +1202,8 @@
 
     if (t.matches("[data-car]")) { carShow?.(carIndex + (t.dataset.car === "next" ? 1 : -1)); return; }
     if (t.matches("[data-car-to]")) { carShow?.(Number(t.dataset.carTo)); return; }
+    if (t.matches("[data-crepa-car]")) { crepaShow?.(crepaIndex + (t.dataset.crepaCar === "next" ? 1 : -1)); return; }
+    if (t.matches("[data-crepa-to]")) { crepaShow?.(Number(t.dataset.crepaTo)); return; }
     if (t.matches("[data-car-pause]")) {
       carPaused = !carPaused;
       t.setAttribute("aria-pressed", String(carPaused));
@@ -1122,8 +1260,8 @@
       const r = state.cart.find(i => rowKey(i) === t.dataset.inc);
       if (!r) return;
       const p = byId[r.id];
-      /* Bebidas con sabor: reabre el modal para elegir el sabor de la nueva pieza. */
-      if (p && p.kind !== "crepa" && (p.flavors || p.askFlavor)) {
+      /* Bebidas con sabor y crepas: reabre el modal en blanco para la nueva pieza. */
+      if (p && (p.flavors || p.askFlavor)) {
         openCustom(p.id, { qty: 1, variant: r.v, format: r.format });
         return;
       }
@@ -1148,7 +1286,7 @@
       const btn = $("[data-add-prod]");
       if (btn) {
         const bp = byId[btn.dataset.addProd];
-        btn.textContent = bp?.kind ? "Elegir opciones" : `Agregar ${state.pq} al pedido`;
+        btn.textContent = bp?.kind ? (bp.kind === "crepa" ? "Elegir ingredientes" : "Elegir opciones") : `Agregar ${state.pq} al pedido`;
       }
       return;
     }

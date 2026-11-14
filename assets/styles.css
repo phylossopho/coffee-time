@@ -164,6 +164,7 @@ p { margin: 0 0 1em; }
   width: 100%; max-width: 540px; margin-inline: auto;
   height: clamp(300px, 44vh, 450px);
   background: var(--surface-2);
+  touch-action: pan-y;
 }
 .car-track { position: absolute; inset: 0; }
 .car-slide {
@@ -229,6 +230,16 @@ p { margin: 0 0 1em; }
 }
 .car-toggle:hover { background: var(--surface); color: var(--ink); }
 .car-toggle[aria-pressed="true"] { color: var(--primary); }
+
+/* ---------- Carrusel de crepas (90% del ancho · 30% de alto) ---------- */
+.crepa-wrap { width: 90%; max-width: 90vw; margin: 28px auto 46px; display: flex; flex-direction: column; gap: 12px; }
+.hero-media.carousel.crepa-carousel {
+  width: 100%; max-width: 100%;
+  height: clamp(200px, 30vh, 440px);
+  aspect-ratio: auto;
+}
+.crepa-bar { width: 100%; }
+.crepa-bar .car-info strong a { color: inherit; }
 
 /* ---------- Botones ---------- */
 .btn {
@@ -557,6 +568,7 @@ dialog.modal::backdrop {
 .modal-product img.photo { object-fit: cover; }
 .modal-product h2 { font-size: 1.15rem; margin: 0 0 2px; }
 .modal-product p { margin: 0; color: var(--muted); font-size: .82rem; line-height: 1.3; }
+.modal-product p.crepa-count { color: var(--primary); font-weight: 700; font-size: .76rem; margin-top: 3px; }
 .modal-body { padding: 16px 20px 8px; overflow-y: auto; overscroll-behavior: contain; }
 .modal-foot { padding: 14px 20px 18px; border-top: 1px solid var(--line); background: var(--surface); }
 
@@ -622,6 +634,7 @@ dialog.modal::backdrop {
 
 .modal-sum { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 10px; }
 .modal-qty { display: flex; align-items: center; gap: 10px; font-size: .82rem; color: var(--muted); }
+.modal-qty strong { color: var(--ink); font-size: 1rem; }
 .modal-total { display: flex; align-items: baseline; gap: 8px; }
 .modal-total span { font-size: .82rem; color: var(--muted); }
 .modal-total strong { font-size: 1.25rem; }
@@ -735,6 +748,10 @@ dialog.modal::backdrop {
   .modal-product h2 { font-size: 1rem; }
   .opt-head { flex-direction: column; gap: 2px; }
   .opt-hint { text-align: left; }
+
+  .crepa-bar { flex-wrap: wrap; }
+  .crepa-bar .car-actions { width: 100%; }
+  .crepa-bar .car-actions .btn { flex: 1; }
 }
 
 @media (max-width: 760px) {

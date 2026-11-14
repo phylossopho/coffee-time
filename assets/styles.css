@@ -240,6 +240,7 @@ p { margin: 0 0 1em; }
 }
 .crepa-bar { width: 100%; }
 .crepa-bar .car-info strong a { color: inherit; }
+.car-sub { color: var(--muted); font-size: .76rem; }
 
 /* ---------- Botones ---------- */
 .btn {
@@ -386,11 +387,6 @@ p { margin: 0 0 1em; }
 .meta { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--line); }
 .meta div { font-size: .86rem; color: var(--muted); }
 .meta strong { display: block; color: var(--ink); font-size: .92rem; }
-
-.upload-link {
-  background: none; border: 0; padding: 0; cursor: pointer;
-  color: var(--primary); font-size: .85rem; font-weight: 700; text-decoration: underline;
-}
 
 .related h2 { font-size: 1.3rem; padding-top: 8px; }
 
@@ -568,6 +564,9 @@ dialog.modal::backdrop {
 .modal-product img.photo { object-fit: cover; }
 .modal-product h2 { font-size: 1.15rem; margin: 0 0 2px; }
 .modal-product p { margin: 0; color: var(--muted); font-size: .82rem; line-height: 1.3; }
+.modal-product p:not(.crepa-count) {
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
 .modal-product p.crepa-count { color: var(--primary); font-weight: 700; font-size: .76rem; margin-top: 3px; }
 .modal-body { padding: 16px 20px 8px; overflow-y: auto; overscroll-behavior: contain; }
 .modal-foot { padding: 14px 20px 18px; border-top: 1px solid var(--line); background: var(--surface); }
@@ -640,6 +639,85 @@ dialog.modal::backdrop {
 .modal-total strong { font-size: 1.25rem; }
 .modal-legal { margin: 8px 0 0; text-align: center; color: var(--muted); font-size: .72rem; }
 #modal-add:disabled { opacity: .45; cursor: not-allowed; transform: none; box-shadow: none; }
+.modal-secondary { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.modal-secondary .btn { flex: 1; min-width: 150px; padding: 9px 14px; font-size: .84rem; }
+
+/* ---------- Selector “Agregar otro producto” ---------- */
+.picker-dialog { width: min(780px, calc(100% - 32px)); max-width: 780px; }
+.picker-card { max-height: min(90vh, 860px); }
+.picker-head {
+  display: flex; align-items: flex-start; gap: 14px;
+  padding: 20px 20px 14px; border-bottom: 1px solid var(--line);
+}
+.picker-head h2 { font-size: 1.3rem; margin: 2px 0 4px; }
+.picker-head p { margin: 0; color: var(--muted); font-size: .84rem; }
+.picker-kicker {
+  display: block; font-size: .68rem; font-weight: 800; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--primary);
+}
+.picker-search {
+  position: relative; display: flex; align-items: center; gap: 10px;
+  padding: 12px 20px; border-bottom: 1px solid var(--line); background: var(--surface-2);
+  color: var(--muted);
+}
+.picker-search input {
+  flex: 1; min-width: 0; padding: 10px 12px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+  outline: none; font-size: .9rem;
+}
+.picker-search input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 16%, transparent);
+}
+.picker-body { padding: 6px 20px 18px; }
+.picker-section { padding: 12px 0 4px; }
+.picker-section h3 {
+  display: flex; align-items: center; gap: 8px;
+  font-size: .78rem; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--muted); margin: 0 0 8px;
+}
+.picker-section h3 span {
+  display: inline-grid; place-items: center; min-width: 20px; height: 20px;
+  padding: 0 6px; border-radius: 999px; background: var(--surface-2);
+  color: var(--muted); font-size: .68rem; letter-spacing: 0;
+}
+.picker-list { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.picker-item {
+  display: flex; align-items: center; gap: 11px; width: 100%; min-width: 0;
+  padding: 9px 11px; border: 1px solid var(--line); border-radius: 14px;
+  background: var(--surface); color: var(--ink); text-align: left; cursor: pointer;
+  transition: border-color .15s, background .15s, transform .15s;
+}
+.picker-item:hover { border-color: color-mix(in srgb, var(--primary) 45%, var(--line)); background: var(--surface-2); }
+.picker-item.is-added {
+  border-color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 10%, var(--surface));
+}
+.picker-item img {
+  width: 48px; height: 48px; flex: none; object-fit: contain;
+  border-radius: 11px; background: var(--surface-2);
+}
+.picker-item img.photo { object-fit: cover; }
+.picker-item-info { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1; }
+.picker-item-info strong { font-size: .88rem; line-height: 1.2; }
+.picker-item-info small {
+  color: var(--muted); font-size: .72rem; line-height: 1.3;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.picker-item-side { display: flex; align-items: center; gap: 8px; flex: none; }
+.picker-item-price { font-size: .8rem; font-weight: 800; color: var(--primary); white-space: nowrap; }
+.picker-plus {
+  display: grid; place-items: center; width: 26px; height: 26px; border-radius: 999px;
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+  color: var(--primary); font-weight: 800; line-height: 1;
+}
+.picker-item:hover .picker-plus { background: var(--primary); color: var(--primary-ink); }
+.picker-item[hidden], .picker-section[hidden], .picker-empty[hidden] { display: none; }
+.picker-empty { padding: 28px 8px; text-align: center; color: var(--muted); font-size: .9rem; }
+.picker-foot { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+.picker-cart-summary { display: flex; flex-direction: column; gap: 2px; font-size: .84rem; color: var(--muted); }
+.picker-cart-summary strong { color: var(--ink); font-size: 1.15rem; }
+.picker-foot-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
 /* ---------- Centro QR ---------- */
 .qr-head { padding-bottom: 8px; }
@@ -752,6 +830,16 @@ dialog.modal::backdrop {
   .crepa-bar { flex-wrap: wrap; }
   .crepa-bar .car-actions { width: 100%; }
   .crepa-bar .car-actions .btn { flex: 1; }
+
+  .modal-secondary { flex-direction: column; }
+  .modal-secondary .btn { min-width: 100%; }
+  .picker-head { padding: 16px 14px 12px; }
+  .picker-head h2 { font-size: 1.15rem; }
+  .picker-search { padding: 10px 14px; }
+  .picker-body { padding: 4px 14px 14px; }
+  .picker-list { grid-template-columns: 1fr; }
+  .picker-foot-actions { width: 100%; }
+  .picker-foot-actions .btn { flex: 1; }
 }
 
 @media (max-width: 760px) {

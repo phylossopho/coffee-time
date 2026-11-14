@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400" role="img" aria-label="Crepa salada con jamón, queso y pepperoni">
+<defs>
+  <radialGradient id="bg3" cx="28%" cy="18%" r="92%">
+    <stop offset="0" stop-color="#f8ecd8"/>
+    <stop offset="1" stop-color="#e7d3b5"/>
+  </radialGradient>
+  <linearGradient id="crepe3" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#f2d8a4"/>
+    <stop offset=".55" stop-color="#e5bb77"/>
+    <stop offset="1" stop-color="#d29c53"/>
+  </linearGradient>
+  <radialGradient id="plate3" cx="50%" cy="45%" r="55%">
+    <stop offset="0" stop-color="#ffffff"/>
+    <stop offset="1" stop-color="#f0e7da"/>
+  </radialGradient>
+</defs>
+<rect width="400" height="400" fill="url(#bg3)"/>
+<circle cx="200" cy="205" r="150" fill="#ffffff" opacity=".3"/>
+<ellipse cx="200" cy="318" rx="132" ry="22" fill="#2a201a" opacity=".14"/>
+<ellipse cx="200" cy="300" rx="140" ry="58" fill="url(#plate3)"/>
+<ellipse cx="200" cy="300" rx="140" ry="58" fill="none" stroke="#e3d7c5" stroke-width="3"/>
+
+<!-- crepa doblada en triángulo -->
+<path d="M92 264c6-50 44-96 100-100 54-4 100 34 116 80-52 34-160 44-216 20z" fill="url(#crepe3)" stroke="#2a201a" stroke-width="6" stroke-linejoin="round"/>
+<path d="M112 260c26-38 60-62 100-68 30-4 58 8 80 30" fill="none" stroke="#f8ead0" stroke-width="8" opacity=".55" stroke-linecap="round"/>
+<path d="M108 268c34-12 68-16 100-12 34 4 64 12 88 26" fill="none" stroke="#c98f45" stroke-width="4" opacity=".5" stroke-linecap="round"/>
+
+<!-- jamón -->
+<path d="M126 244c14-24 40-36 66-32 22 4 38 18 46 36-24 12-52 18-78 16-14-1-26-8-34-20z" fill="#e78b8b" stroke="#cd6c6c" stroke-width="3"/>
+<path d="M144 242c12-14 28-20 44-18 14 2 26 10 32 20" fill="none" stroke="#f6c3c3" stroke-width="6" opacity=".8" stroke-linecap="round"/>
+
+<!-- queso derretido -->
+<path d="M138 236c20-16 44-22 66-16 18 5 32 16 38 30-10 12-26 18-44 16-24-2-46-12-60-30z" fill="#f7cf60" stroke="#dfae3c" stroke-width="3"/>
+<g fill="#fbe08e">
+  <circle cx="172" cy="240" r="4"/><circle cx="198" cy="236" r="3.4"/><circle cx="216" cy="246" r="3.6"/>
+</g>
+
+<!-- pepperoni -->
+<g stroke="#9e332f" stroke-width="3">
+  <circle cx="164" cy="222" r="16" fill="#c9473f"/>
+  <circle cx="210" cy="216" r="14" fill="#c9473f"/>
+</g>
+<g fill="#f0a09a">
+  <circle cx="159" cy="218" r="2.4"/><circle cx="168" cy="226" r="2"/><circle cx="205" cy="213" r="2.2"/><circle cx="214" cy="220" r="2"/>
+</g>
+
+<!-- hojas verdes -->
+<path d="M238 268c12-16 30-18 40-8-10 14-26 18-40 8z" fill="#4f8a5c"/>
+<path d="M128 274c-12-12-28-14-38-5 9 12 24 15 38 5z" fill="#5c9466"/>
+<path d="M244 272c9-8 18-10 26-8" fill="none" stroke="#bfe0c2" stroke-width="2" stroke-linecap="round"/>
+
+<!-- orégano -->
+<g fill="#3f6b45" opacity=".8">
+  <circle cx="186" cy="262" r="2"/><circle cx="198" cy="268" r="1.8"/><circle cx="176" cy="272" r="1.7"/><circle cx="214" cy="264" r="1.8"/>
+</g>
+
+<g fill="#ffffff" opacity=".8">
+  <circle cx="112" cy="200" r="2.4"/><circle cx="294" cy="200" r="2.2"/><circle cx="314" cy="230" r="2"/>
+</g>
+</svg>

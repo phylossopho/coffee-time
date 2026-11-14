@@ -7,7 +7,7 @@ Guarda aquí las fotos con el nombre del id del producto, por ejemplo:
   latte.webp
   molletes.webp
   ensalada.webp
-  crepa-dulce.webp
+  arma-tu-crepa.webp
 
 Formato: WebP, cuadradas de 800 x 800 px (mínimo 600 x 600 px), calidad 80-82
 y entre 60 y 120 KB para que la página cargue rápido. Guarda en sRGB y sin
@@ -22,17 +22,17 @@ Los productos ya traen esa ruta escrita; solo coloca el archivo con el nombre
 correcto y aparece solo. Mientras no exista, la tarjeta usa la ilustración
 vectorial de respaldo.
 
-También puedes cambiar la foto desde la ficha del producto en la página
-(botón "Cambiar foto de este producto"); esa versión se guarda solo en tu
-navegador.
+La crepa usa arma-tu-crepa.webp y una galería de tres vistas para el carrusel:
+arma-tu-crepa-1.svg, arma-tu-crepa-2.svg y arma-tu-crepa-3.svg. Si tienes fotos
+reales, reemplaza esas rutas en el campo "gallery" de assets/data.js.
 
 Ids de productos:
   capuccino, latte, americano, mokachino, espresso, cortado, chocolate,
   tisanas, latte-chai, matcha, chai, taro, soda-italiana, smoothie,
   frappe-basico, frappe-especial, malteada, shaker-chai, shaker-americano,
   shaker-capuchino, shaker-tisanas, shaker-latte, shaker-mokachino,
-  crepa-dulce, crepa-fruta, crepa-salada, croissant-rol, sandwich, chapata,
-  molletes, ensalada, extra-crepa, perlas, jarabe, portavaso
+  arma-tu-crepa, croissant-rol, sandwich, chapata, molletes, ensalada,
+  extra-crepa, perlas, jarabe, portavaso
 
 La lista completa con medidas y orden sugerido está en:
   assets/img/IMAGENES-FALTANTES.md

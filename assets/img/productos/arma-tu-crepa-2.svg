@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400" role="img" aria-label="Crepa de fruta con fresa, kiwi y durazno">
+<defs>
+  <radialGradient id="bg2" cx="28%" cy="18%" r="92%">
+    <stop offset="0" stop-color="#f3f7ea"/>
+    <stop offset="1" stop-color="#dce6c8"/>
+  </radialGradient>
+  <linearGradient id="crepe2" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#f6e0b3"/>
+    <stop offset=".55" stop-color="#eac484"/>
+    <stop offset="1" stop-color="#d8a660"/>
+  </linearGradient>
+  <radialGradient id="plate2" cx="50%" cy="45%" r="55%">
+    <stop offset="0" stop-color="#ffffff"/>
+    <stop offset="1" stop-color="#f0ebdf"/>
+  </radialGradient>
+</defs>
+<rect width="400" height="400" fill="url(#bg2)"/>
+<circle cx="200" cy="205" r="150" fill="#ffffff" opacity=".35"/>
+<ellipse cx="200" cy="318" rx="132" ry="22" fill="#2a201a" opacity=".13"/>
+<ellipse cx="200" cy="300" rx="140" ry="58" fill="url(#plate2)"/>
+<ellipse cx="200" cy="300" rx="140" ry="58" fill="none" stroke="#e2dcc9" stroke-width="3"/>
+
+<!-- crepa en abanico -->
+<path d="M96 262c4-50 42-96 96-98 56-2 96 40 108 88-52 24-150 30-204 10z" fill="url(#crepe2)" stroke="#2a201a" stroke-width="6" stroke-linejoin="round"/>
+<path d="M116 258c22-40 56-68 96-74 34-5 64 10 84 36" fill="none" stroke="#f8ead0" stroke-width="8" opacity=".6" stroke-linecap="round"/>
+<path d="M148 268c10-34 30-60 58-72M196 274c2-34 14-60 34-76" fill="none" stroke="#c98f45" stroke-width="4" opacity=".5" stroke-linecap="round"/>
+
+<!-- crema batida -->
+<g fill="#fffaf1">
+  <circle cx="146" cy="232" r="24"/><circle cx="172" cy="216" r="21"/><circle cx="198" cy="228" r="23"/>
+  <circle cx="224" cy="214" r="20"/><circle cx="248" cy="230" r="22"/>
+</g>
+<g fill="none" stroke="#e8dccb" stroke-width="2.5">
+  <path d="M130 236c6-12 18-18 30-16"/><path d="M160 220c4-11 14-16 25-15"/><path d="M212 218c5-10 16-15 26-13"/>
+</g>
+
+<!-- fresa -->
+<path d="M122 250c12-11 26-8 33 3 6 12-2 27-17 32-15-5-23-21-16-35z" fill="#d94f4a"/>
+<path d="M135 245l-5-10 9 3 4-10 5 10 9-3-6 10" fill="#3f7a4e"/>
+<circle cx="131" cy="259" r="1.8" fill="#ffe6c9"/><circle cx="141" cy="263" r="1.8" fill="#ffe6c9"/><circle cx="136" cy="271" r="1.8" fill="#ffe6c9"/>
+
+<!-- kiwi -->
+<circle cx="266" cy="252" r="24" fill="#8fbf4d" stroke="#6f9c37" stroke-width="3"/>
+<circle cx="266" cy="252" r="15" fill="#d7e9a8"/>
+<g fill="#3c3220">
+  <circle cx="260" cy="244" r="1.7"/><circle cx="272" cy="245" r="1.7"/><circle cx="276" cy="254" r="1.7"/>
+  <circle cx="268" cy="260" r="1.7"/><circle cx="258" cy="256" r="1.7"/><circle cx="266" cy="252" r="2"/>
+</g>
+
+<!-- durazno -->
+<path d="M186 246c14-12 32-8 38 6 6 15-4 30-21 32-16-5-24-24-17-38z" fill="#f0a05a"/>
+<path d="M200 242c4-6 10-8 15-5" fill="none" stroke="#c9723a" stroke-width="3" stroke-linecap="round"/>
+<path d="M198 248c-6 9-8 19-6 28" fill="none" stroke="#fff0da" stroke-width="3" opacity=".7"/>
+
+<!-- hojas de menta -->
+<path d="M236 276c10-14 26-16 34-6-8 12-22 16-34 6z" fill="#4f8a5c"/>
+<path d="M242 280c8-8 16-11 24-10" fill="none" stroke="#bfe0c2" stroke-width="2" stroke-linecap="round"/>
+
+<g fill="#ffffff" opacity=".85">
+  <circle cx="108" cy="198" r="2.4"/><circle cx="140" cy="170" r="2"/><circle cx="300" cy="188" r="2.4"/><circle cx="320" cy="220" r="2"/>
+</g>
+</svg>

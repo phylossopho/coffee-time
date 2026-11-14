@@ -31,7 +31,7 @@ assets/img/IMAGENES-FALTANTES.md  lista de fotos, nombres y medidas
 
 ## Portada y menú
 
-La portada **no** muestra los 35 productos: es un escaparate compacto con
+La portada **no** muestra los 33 productos: es un escaparate compacto con
 hero + carrusel, tarjetas de categoría, seis favoritos y contacto. El menú
 completo vive en `#/menu`, con buscador y chips por categoría.
 
@@ -58,8 +58,13 @@ el producto se agrega directo al carrito.
 
 ### Crepas (`kind: "crepa"`)
 
+Hay **un solo producto**: **Arma tu crepa** (`id: "arma-tu-crepa"`). No existen
+“crepa dulce”, “de fruta” ni “salada” por separado: dentro del modal se eligen
+los ingredientes de cualquiera de los tres grupos y se pueden mezclar.
+
 El modal muestra los ingredientes agrupados en **Dulce**, **Fruta** y
-**Salada**, y se pueden mezclar entre grupos.
+**Salada**. La ficha del producto tiene una descripción pensada para antojar y
+el botón **Elegir ingredientes**.
 
 **Cada crepa se cotiza aparte.** El carrito guarda una línea por crepa con sus
 propios ingredientes y el precio se calcula siempre desde la base de esa crepa,
@@ -75,8 +80,9 @@ nunca sumando o restando sobre el total de las demás.
 - El modal indica cuántas crepas van (`Van 2 crepas`), el precio de **esta
   crepa** y el **total de crepas** (por ejemplo $70 + $60 = $130).
 - Las crepas **no usan el selector de cantidad**: cada una se elige por
-  separado. Al agregar otra desde el carrito con **+**, el modal se reabre en
-  blanco y vuelve a calcular desde $60.
+  separado. El botón principal dice **Agregar al pedido**; el **+** del carrito
+  reabre este mismo modal en blanco para agregar otra crepa y vuelve a calcular
+  desde $60. También hay un acceso directo **+ Otra crepa** dentro del modal.
 - Si dos crepas quedan con los mismos ingredientes, se agrupan en una línea con
   cantidad 2 y se cobran como 2 × su precio.
 
@@ -88,6 +94,23 @@ customize: {
   crepa: { base: 60, extra: 10, promoAt: 3, promoPrice: 70, groups: [ /* ... */ ] }
 }
 ```
+
+### Agregar otro producto desde cualquier modal
+
+Todos los modales (bebidas, crepas, comida y sabores) tienen el botón
+**+ Agregar otro producto**. Al tocarlo se agrega primero el producto que se
+está personalizando —si cumple sus requisitos— y se abre el selector
+`<dialog id="picker-dialog">` con:
+
+- buscador sin acentos (por ejemplo “cafe” encuentra “café”);
+- secciones de **Bebidas calientes**, **Bebidas frías**, **Crepas** y
+  **Comida y otros** (los extras no aparecen);
+- productos simples que se suman con un toque y productos con opciones que
+  abren su modal;
+- resumen con el total del pedido y el acceso **Ver mi pedido**.
+
+Si falta elegir un sabor o ingrediente, el botón avisa y no abre el selector
+hasta completar la selección.
 
 ### Bebidas (`kind: "bebida"`)
 
@@ -158,17 +181,20 @@ seleccionada. Sirve si más adelante quieren un QR por mesa.
 ## Carrusel de crepas
 
 La vista `#/categoria/crepas` no usa cuadrícula: muestra un **carrusel de una
-imagen a la vez** con las crepas del menú (hoy tres), al **90% del ancho de la
-pantalla** y con una altura de **30vh** (`clamp(200px, 30vh, 440px)`).
+imagen a la vez** para **Arma tu crepa**, al **90% del ancho de la pantalla** y
+con una altura de **30vh** (`clamp(200px, 30vh, 440px)`).
 
-- Rota automáticamente cada 5 segundos y se detiene al pasar el mouse o enfocar.
+- El carrusel rota entre las **tres vistas** de la galería del producto
+  (`arma-tu-crepa-1.svg`, `-2.svg`, `-3.svg`): dulce, fruta y salada.
+- Cambia cada 5 segundos y se detiene al pasar el mouse o enfocar.
 - Tiene flechas, puntos y **deslizamiento** con el dedo o el mouse.
-- Cada slide muestra el nombre, “desde $60” y los botones **Ver ficha** y
+- La barra inferior muestra el nombre, “desde $60” y los botones **Ver ficha** y
   **Elegir ingredientes**.
 - Las demás categorías siguen mostrando tarjetas en cuadrícula.
 
-Las fotos reales de las crepas (`assets/img/productos/crepa-*.webp`) siguen
-pendientes; mientras no existan se usa la ilustración `crepe.svg`.
+Para cambiar las vistas, edita el arreglo `gallery` del producto en
+`assets/data.js`. Si se agregan fotos reales, basta con sustituir esas rutas por
+las nuevas imágenes.
 
 ## Carrusel de promociones
 
@@ -203,7 +229,7 @@ WebP. El patrón se pinta con `opacity: .055`.
 
 ## Fotos de producto
 
-El sitio ya apunta a `assets/img/productos/<id>.webp` para los 35 productos. No
+El sitio ya apunta a `assets/img/productos/<id>.webp` para los 33 productos. No
 hace falta editar código: guarda la imagen con el nombre exacto y aparece sola.
 Mientras no exista, la tarjeta usa la ilustración vectorial de respaldo.
 
@@ -211,8 +237,9 @@ Mientras no exista, la tarjeta usa la ilustración vectorial de respaldo.
 - Una sola imagen se ve bien en escritorio y en móvil.
 - La lista completa de nombres, productos y orden sugerido está en
   [`assets/img/IMAGENES-FALTANTES.md`](assets/img/IMAGENES-FALTANTES.md).
-- También puedes cambiar la foto desde la ficha del producto (se guarda solo en
-  tu navegador con `localStorage`).
+- **Arma tu crepa** usa `arma-tu-crepa.webp` para la ficha y las tarjetas, y la
+  galería `arma-tu-crepa-1.svg`, `-2.svg`, `-3.svg` para el carrusel. Si subes
+  fotos reales, actualiza el arreglo `gallery` del producto.
 
 Si prefieres otra ruta o formato, edita el campo `photo` del producto:
 
@@ -247,7 +274,6 @@ muestran en la sección **Visítanos** del inicio y en `#/contacto`.
 - **Paletas**: Casa, Verde, Tostado, Noche.
 - **Colores**: principal, acento, fondo, superficie, texto.
 - **Forma**: redondeo (0–32 px), tipografía (sans/serif/mono), modo oscuro.
-- **Imágenes**: foto por producto desde su ficha.
 - Todo se guarda en `localStorage` y se puede restablecer.
 
 ## Rutas
@@ -257,7 +283,7 @@ muestran en la sección **Visítanos** del inicio y en `#/contacto`.
 | `#/` | portada: hero, carrusel, categorías, favoritos y contacto |
 | `#/menu` | menú completo con buscador y chips |
 | `#/categoria/<id>` | categoría (`calientes`, `frias`, `crepas`, `comida`, `extras`) |
-| `#/producto/<id>` | ficha con variantes, sabores, cantidad y cambio de foto |
+| `#/producto/<id>` | ficha con variantes, sabores y cantidad (en crepas: elegir ingredientes) |
 | `#/promociones` | las nueve promociones completas |
 | `#/contacto` | dirección, horarios, redes y WhatsApp |
 | `#/qr` | centro de QR y letreros imprimibles |
@@ -319,6 +345,7 @@ git push
   - `flavors: ["Fresa", ...]` muestra los sabores disponibles como etiquetas.
   - `kind: "crepa" | "bebida" | "sabor"` activa el modal de personalización.
   - `photo` apunta a la foto WebP; sin ella se usa la ilustración SVG.
+  - `gallery` (opcional) define las imágenes del carrusel de crepas.
   - `price` se usa cuando no hay variantes.
 - El buscador filtra por nombre, descripción, categoría, sabores y tamaños.
 - El modal usa `<dialog>` nativo: cierra con Escape, clic en el fondo o el botón ✕.

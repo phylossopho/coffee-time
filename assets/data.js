@@ -36,7 +36,7 @@ window.MENU = {
   categories: [
     { id: "calientes", name: "Bebidas calientes", icon: "cup",      blurb: "Café, chocolate, tisanas y especialidades." },
     { id: "frias",     name: "Bebidas frías",     icon: "iced",     blurb: "Sodas, smoothies, frappés, malteadas y shakers." },
-    { id: "crepas",    name: "Crepas",            icon: "crepe",    blurb: "Dulces, de fruta o saladas. Un ingrediente incluido." },
+    { id: "crepas",    name: "Crepas",            icon: "crepe",    blurb: "Arma la tuya: dulce, de fruta o salada, con los ingredientes que tú elijas." },
     { id: "comida",    name: "Comida y otros",    icon: "food",     blurb: "Sándwich, chapata, molletes, ensalada y otros antojos." },
     { id: "extras",    name: "Extras",            icon: "beans",    blurb: "Para personalizar tu bebida o tu crepa." }
   ],
@@ -170,18 +170,17 @@ window.MENU = {
       variants: [["Vaso chico", 55], ["Vaso grande", 60]] },
 
     /* ---------------- Crepas ---------------- */
-    { id: "crepa-dulce", cat: "crepas", kind: "crepa", name: "Crepa dulce", icon: "crepe", tag: "",
-      desc: "Un ingrediente incluido. Cada extra cuesta $10.", price: 60,
-      photo: "assets/img/productos/crepa-dulce.webp",
-      flavors: ["Cajeta", "Crema de avellana", "Leche condensada", "Mermelada de zarzamora", "Galleta de chocolate", "Mazapán", "Chocolate semiamargo", "Chocolate con leche", "Chocolate"] },
-    { id: "crepa-fruta", cat: "crepas", kind: "crepa", name: "Crepa de fruta", icon: "crepe", tag: "",
-      desc: "Un ingrediente incluido. Cada extra cuesta $10.", price: 60,
-      photo: "assets/img/productos/crepa-fruta.webp",
-      flavors: ["Fresa", "Nuez", "Plátano", "Durazno"] },
-    { id: "crepa-salada", cat: "crepas", kind: "crepa", name: "Crepa salada", icon: "crepe", tag: "",
-      desc: "Un ingrediente incluido. Cada extra cuesta $10.", price: 60,
-      photo: "assets/img/productos/crepa-salada.webp",
-      flavors: ["Jamón", "Pepperoni", "Queso crema", "Queso manchego"] },
+    /* Un solo producto: tú eliges los ingredientes dentro del modal. */
+    { id: "arma-tu-crepa", cat: "crepas", kind: "crepa", name: "Arma tu crepa", icon: "crepe", tag: "Hecha al momento",
+      desc: "Tibia, suavecita y con los bordes doraditos: elige dulce, fruta o salada y deja que el relleno se derrita dentro. Se prepara al momento, así que llega a la mesa con ese olor que ya te está antojando la primera mordida.",
+      price: 60,
+      photo: "assets/img/productos/arma-tu-crepa.webp",
+      gallery: [
+        "assets/img/productos/arma-tu-crepa-1.svg",
+        "assets/img/productos/arma-tu-crepa-2.svg",
+        "assets/img/productos/arma-tu-crepa-3.svg"
+      ],
+      flavors: ["Cajeta", "Nutella", "Lechera", "Mermelada de zarzamora", "Galleta de chocolate", "Mazapán", "Chocolate semiamargo", "Chocolate con leche", "Chocolate", "Fresa", "Nuez", "Plátano", "Durazno", "Jamón", "Pepperoni", "Queso crema", "Queso manchego"] },
 
     /* ---------------- Comida y otros ---------------- */
     { id: "sandwich", cat: "comida", name: "Sándwich", icon: "food", tag: "",

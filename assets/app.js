@@ -1,4 +1,4 @@
-/* COFFEE TIME — router, carrito con variantes, promociones, tema e imágenes. */
+/* COFFEE TIME — router, carrito con variantes, promociones y tema. */
 (() => {
   "use strict";
 
@@ -9,8 +9,8 @@
   const crepaCfg = MENU.customize.crepa;
 
   /* Selección curada para la portada: pocos productos, no los 35. */
-  const FEATURED = ["latte", "frappe-basico", "crepa-dulce", "sandwich", "soda-italiana", "ensalada"];
-  const LS = { theme: "coffeetime.theme.v1", cart: "coffeetime.cart.v1", img: "coffeetime.img.v1", place: "coffeetime.place.v1" };
+  const FEATURED = ["latte", "frappe-basico", "arma-tu-crepa", "sandwich", "soda-italiana", "ensalada"];
+  const LS = { theme: "coffeetime.theme.v1", cart: "coffeetime.cart.v1", place: "coffeetime.place.v1" };
 
   const read = (key, fallback) => {
     try { const v = JSON.parse(localStorage.getItem(key)); return v ?? fallback; }
@@ -39,8 +39,11 @@
 
   const state = {
     theme: Object.assign(structuredClone(DEFAULT_THEME), read(LS.theme, {})),
-    cart: read(LS.cart, []),
-    images: read(LS.img, {}),
+    /* Descarta líneas de versiones anteriores cuyos productos ya no existen. */
+    cart: (() => {
+      const saved = read(LS.cart, []);
+      return Array.isArray(saved) ? saved.filter(r => r && byId[r.id]) : [];
+    })(),
     orderPlace: read(LS.place, "Para llevar"),
     query: "",
     pq: 1,
@@ -63,11 +66,13 @@
   const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
   const money = n => "$" + n.toFixed(2).replace(/\.00$/, "");
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  /* Búsqueda sin acentos: “cafe” encuentra “café”. */
+  const fold = s => String(s).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
-  const imgFor = p => state.images[p.id] || p.photo || `assets/img/${p.icon}.svg`;
-  const imgClass = p => state.images[p.id] || p.photo ? "photo" : "";
-  const imgFallback = p => `assets/img/${p.icon}.svg`;
-  const imgOnError = p => `this.onerror=null;this.src='${imgFallback(p)}';this.classList.remove('photo')`;
+  const imgFor = p => p.photo || `assets/img/${p.icon}.svg`;
+  const imgClass = p => p.photo ? "photo" : "";
+  const imgFallback = p => p.gallery?.[0] || `assets/img/${p.icon}.svg`;
+  const imgOnError = p => `this.onerror=null;this.src='${imgFallback(p)}';${p.gallery?.length ? "this.classList.add('photo')" : "this.classList.remove('photo')"}`;
   const promoImg = p => p.webp || p.img.replace(/\.(jpe?g|png)$/i, ".webp");
   const promoFallback = p => p.img;
   const basePrice = p => p.variants ? Math.min(...p.variants.map(v => v[1])) : p.price;
@@ -265,7 +270,7 @@
         <div class="qty">
           <button data-dec="${esc(key)}" aria-label="Quitar uno">−</button>
           <output>${i.qty}</output>
-          <button data-inc="${esc(key)}" aria-label="Agregar uno">+</button>
+          <button data-inc="${esc(key)}" aria-label="${i.kind === "crepa" ? "Agregar otra crepa" : "Agregar uno"}">+</button>
         </div>
       </div>`;
     }).join("");
@@ -527,29 +532,36 @@
     ${grid(list)}`;
   }
 
+  /* Galería de una crepa: 3 vistas (dulce, fruta y salada) o su foto si aún no hay galería. */
+  const galleryFor = p => (p.gallery?.length ? p.gallery : [imgFor(p)]);
+
   function crepaCarousel(list) {
     const first = list[0];
+    const slides = list.flatMap((p, pi) => galleryFor(p).map((src, si) => ({ p, pi, src, si })));
+    const multi = slides.length > 1;
     return `<section class="crepa-wrap" aria-label="Crepas">
       <div class="hero-media carousel crepa-carousel" id="crepa-carousel" role="region"
-           aria-roledescription="carrusel" aria-label="Crepas">
+           aria-roledescription="carrusel" aria-label="Arma tu crepa">
         <div class="car-track">
-          ${list.map((p, i) => `<div class="car-slide${i === 0 ? " is-active" : ""}" data-slide="${i}"
+          ${slides.map((s, i) => `<div class="car-slide${i === 0 ? " is-active" : ""}" data-slide="${i}"
+               data-crepa-product="${s.pi}" data-crepa-view="${s.si}"
                aria-hidden="${i === 0 ? "false" : "true"}">
-            <div class="car-bg" aria-hidden="true" style="background-image:url('${imgFor(p)}')"></div>
-            <img src="${imgFor(p)}" alt="${esc(p.name)}" decoding="async" onerror="${imgOnError(p)}">
+            <div class="car-bg" aria-hidden="true" style="background-image:url('${s.src}')"></div>
+            <img src="${s.src}" alt="${esc(s.p.name)} — vista ${s.si + 1}" decoding="async">
           </div>`).join("")}
         </div>
-        <button class="car-btn car-prev" type="button" data-crepa-car="prev" aria-label="Crepa anterior">‹</button>
-        <button class="car-btn car-next" type="button" data-crepa-car="next" aria-label="Crepa siguiente">›</button>
+        ${multi ? `<button class="car-btn car-prev" type="button" data-crepa-car="prev" aria-label="Vista anterior">‹</button>
+        <button class="car-btn car-next" type="button" data-crepa-car="next" aria-label="Vista siguiente">›</button>` : ""}
       </div>
-      <div class="car-dots" role="group" aria-label="Elegir crepa">
-        ${list.map((p, i) => `<button class="car-dot${i === 0 ? " is-active" : ""}" type="button"
-             data-crepa-to="${i}" aria-label="${esc(p.name)}"
+      ${multi ? `<div class="car-dots" role="group" aria-label="Vistas de la crepa">
+        ${slides.map((s, i) => `<button class="car-dot${i === 0 ? " is-active" : ""}" type="button"
+             data-crepa-to="${i}" aria-label="Vista ${i + 1} de ${slides.length}"
              aria-current="${i === 0 ? "true" : "false"}"></button>`).join("")}
-      </div>
+      </div>` : ""}
       <div class="car-bar crepa-bar">
         <div class="car-info">
           <strong id="crepa-title"><a href="#/producto/${first.id}">${esc(first.name)}</a></strong>
+          <span class="car-sub">Dulce · Fruta · Salada · hecha al momento</span>
           <span class="car-price" id="crepa-price">${priceLabel(first)}</span>
         </div>
         <div class="car-actions">
@@ -576,8 +588,8 @@
   function customSummary(p) {
     if (p.kind === "crepa") {
       return `<div class="custom-summary">
-        <strong>Elige tus ingredientes</strong>
-        <p>Puedes mezclar dulce, fruta y salada. Cada crepa se cotiza aparte: 1 ingrediente = ${money(crepaCfg.base)} · 3 ingredientes = ${money(crepaCfg.promoPrice)}.</p>
+        <strong>Hazla a tu gusto</strong>
+        <p>Dulce, de fruta o salada: tú eliges. Se prepara al momento y cada crepa se cotiza aparte: 1 ingrediente = ${money(crepaCfg.base)} · 3 ingredientes = ${money(crepaCfg.promoPrice)}.</p>
       </div>`;
     }
     if (p.kind === "bebida") {
@@ -638,7 +650,6 @@
             <div><strong>Pedidos</strong>${esc(MENU.phone)}</div>
             ${p.kind === "crepa" ? `<div><strong>Promo</strong>3 ingredientes por ${money(crepaCfg.promoPrice)}</div>` : ""}
           </div>
-          <p style="margin-top:20px"><button class="upload-link" data-upload="${p.id}">Cambiar foto de este producto</button></p>
         </div>
       </section>
       ${rel.length ? `<div class="wrap related"><h2>También te puede gustar</h2></div>${grid(rel)}` : ""}`;
@@ -895,7 +906,11 @@
             <strong id="modal-total" aria-live="polite">${money(isCrepa ? cartCrepaTotal() + customUnitPrice() : customUnitPrice() * custom.qty)}</strong>
           </div>
         </div>
-        <button class="btn btn-primary btn-block" type="button" data-modal-add id="modal-add">${isCrepa ? `Agregar crepa ${crepaN}` : "Agregar al pedido"}</button>
+        <button class="btn btn-primary btn-block" type="button" data-modal-add id="modal-add">Agregar al pedido</button>
+        <div class="modal-secondary">
+          ${isCrepa ? `<button class="btn btn-ghost" type="button" data-modal-more-crepa>+ Otra crepa</button>` : ""}
+          <button class="btn btn-ghost" type="button" data-modal-picker>+ Agregar otro producto</button>
+        </div>
         <p class="modal-legal">Precios en pesos · el pedido se confirma por WhatsApp.</p>
       </footer>
     </div>`;
@@ -980,11 +995,11 @@
     if (dlg?.open) dlg.close();
   }
 
-  function addCustomToCart() {
+  function addCustomToCart(opts = {}) {
     const p = byId[custom.productId];
-    if (!p) return;
+    if (!p) return false;
     const missing = customMissing(p);
-    if (missing) { toast(missing); return; }
+    if (missing) { toast(missing); return false; }
     const flavors = p.askFlavor && !p.flavors ? [custom.flavorText.trim()] : [...custom.flavors];
     addToCart(p.id, p.kind === "crepa" ? 1 : custom.qty, custom.variant, {
       kind: p.kind,
@@ -992,7 +1007,107 @@
       extras: custom.extras.map(e => ({ id: e.id, option: e.option || "" })),
       format: needsFormat(p) ? custom.format : ""
     });
-    closeCustom();
+    if (opts.next === "picker") { closeCustom(); openPicker(); }
+    else if (opts.next === "more") openCustom(p.id);
+    else closeCustom();
+    return true;
+  }
+
+  /* ---------------- Selector “Agregar otro producto” ---------------- */
+  const PICKER_SKIP = new Set(["extras"]);
+
+  function pickerItem(p) {
+    const search = fold(`${p.name} ${p.desc || ""} ${(p.flavors || []).join(" ")} ${catById[p.cat]?.name || ""}`);
+    const price = p.kind && !p.variants && p.kind !== "crepa" ? money(p.price) : priceLabel(p);
+    return `<button class="picker-item" type="button" data-picker-item data-picker-add="${p.id}"
+        data-search="${esc(search)}" aria-label="${p.kind ? "Elegir" : "Agregar"} ${esc(p.name)}">
+      <img src="${imgFor(p)}" alt="" loading="lazy" class="${imgClass(p)}" onerror="${imgOnError(p)}">
+      <span class="picker-item-info">
+        <strong>${esc(p.name)}</strong>
+        <small>${esc(p.desc || "")}</small>
+      </span>
+      <span class="picker-item-side">
+        <span class="picker-item-price">${price}</span>
+        <span class="picker-plus" aria-hidden="true">+</span>
+      </span>
+    </button>`;
+  }
+
+  function pickerMarkup() {
+    const cats = MENU.categories.filter(c => !PICKER_SKIP.has(c.id));
+    return `<div class="modal-card picker-card">
+      <header class="picker-head">
+        <div>
+          <span class="picker-kicker">Sigue armando tu pedido</span>
+          <h2 id="picker-title">Agrega otro producto</h2>
+          <p>Bebidas calientes, frías, crepas y comida. Toca uno para sumarlo.</p>
+        </div>
+        <button class="icon-btn" type="button" data-close-picker aria-label="Cerrar">✕</button>
+      </header>
+      <div class="picker-search">
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16.5 16.5 21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <input type="search" id="picker-search" placeholder="Buscar café, frappé, crepa…" autocomplete="off">
+      </div>
+      <div class="modal-body picker-body" id="picker-body">
+        ${cats.map(c => {
+          const items = MENU.products.filter(p => p.cat === c.id);
+          if (!items.length) return "";
+          return `<section class="picker-section" data-picker-section>
+            <h3>${esc(c.name)}<span>${items.length}</span></h3>
+            <div class="picker-list">${items.map(pickerItem).join("")}</div>
+          </section>`;
+        }).join("")}
+        <p class="picker-empty" id="picker-empty" hidden>No encontramos ese producto. Prueba con otra palabra.</p>
+      </div>
+      <footer class="modal-foot picker-foot">
+        <div class="picker-cart-summary">
+          <span id="picker-cart-count">Tu pedido está vacío</span>
+          <strong id="picker-cart-total">$0</strong>
+        </div>
+        <div class="picker-foot-actions">
+          <button class="btn btn-ghost" type="button" data-close-picker>Seguir viendo</button>
+          <button class="btn btn-primary" type="button" data-open-cart>Ver mi pedido</button>
+        </div>
+      </footer>
+    </div>`;
+  }
+
+  function paintPickerCart() {
+    const n = cartCount();
+    const count = $("#picker-cart-count");
+    const total = $("#picker-cart-total");
+    if (count) count.textContent = n ? `${n} producto${n === 1 ? "" : "s"} en tu pedido` : "Tu pedido está vacío";
+    if (total) total.textContent = money(cartTotal());
+  }
+
+  function filterPicker() {
+    const q = fold(($("#picker-search")?.value || "").trim());
+    let any = false;
+    $$("[data-picker-item]").forEach(item => {
+      const match = !q || item.dataset.search.includes(q);
+      item.hidden = !match;
+      if (match) any = true;
+    });
+    $$("[data-picker-section]").forEach(section => {
+      section.hidden = !$$("[data-picker-item]:not([hidden])", section).length;
+    });
+    const empty = $("#picker-empty");
+    if (empty) empty.hidden = any;
+  }
+
+  function openPicker() {
+    const dlg = $("#picker-dialog");
+    if (!dlg) return;
+    if (dlg.open) dlg.close();
+    dlg.innerHTML = pickerMarkup();
+    dlg.showModal();
+    paintPickerCart();
+    $("#picker-search")?.focus();
+  }
+
+  function closePicker() {
+    const dlg = $("#picker-dialog");
+    if (dlg?.open) dlg.close();
   }
 
   /* ---------------- Carruseles ---------------- */
@@ -1077,7 +1192,7 @@
     start();
   }
 
-  /* Carrusel de crepas: una imagen a la vez, rotando entre las crepas del menú. */
+  /* Carrusel de crepas: una vista a la vez, rotando la galería de "Arma tu crepa". */
   function initCrepaCarousel() {
     clearInterval(crepaTimer);
     crepaTimer = null;
@@ -1102,7 +1217,8 @@
         d.classList.toggle("is-active", k === crepaIndex);
         d.setAttribute("aria-current", String(k === crepaIndex));
       });
-      const p = list[crepaIndex];
+      const active = slides[crepaIndex];
+      const p = list[Number(active?.dataset.crepaProduct) || 0];
       if (!p) return;
       const title = $("#crepa-title");
       const price = $("#crepa-price");
@@ -1116,7 +1232,7 @@
     const stop = () => { clearInterval(crepaTimer); crepaTimer = null; };
     const start = () => {
       stop();
-      if (!document.hidden) crepaTimer = setInterval(() => show(crepaIndex + 1), 5000);
+      if (!document.hidden && slides.length > 1) crepaTimer = setInterval(() => show(crepaIndex + 1), 5000);
     };
 
     crepaShow = n => { show(n); start(); };
@@ -1126,7 +1242,7 @@
     root.addEventListener("mouseleave", start);
     root.addEventListener("focusin", stop);
     root.addEventListener("focusout", start);
-    addSwipe(root, () => crepaShow?.(crepaIndex + 1), () => crepaShow?.(crepaIndex - 1));
+    if (slides.length > 1) addSwipe(root, () => crepaShow?.(crepaIndex + 1), () => crepaShow?.(crepaIndex - 1));
 
     show(0);
     start();
@@ -1187,7 +1303,7 @@
 
   /* ---------------- Eventos ---------------- */
   document.addEventListener("click", e => {
-    const t = e.target.closest("[data-add],[data-add-prod],[data-inc],[data-dec],[data-remove],[data-pq],[data-pv],[data-upload],[data-close-drawer],[data-noop],[data-preset],[data-car],[data-car-to],[data-car-pause],[data-crepa-car],[data-crepa-to],[data-clear-query],[data-close-modal],[data-flavor],[data-addon],[data-modal-variant],[data-modal-format],[data-modal-qty],[data-modal-add],[data-print]");
+    const t = e.target.closest("[data-add],[data-add-prod],[data-inc],[data-dec],[data-remove],[data-pq],[data-pv],[data-close-drawer],[data-noop],[data-preset],[data-car],[data-car-to],[data-car-pause],[data-crepa-car],[data-crepa-to],[data-clear-query],[data-close-modal],[data-flavor],[data-addon],[data-modal-variant],[data-modal-format],[data-modal-qty],[data-modal-add],[data-modal-more-crepa],[data-modal-picker],[data-picker-add],[data-close-picker],[data-open-cart],[data-print]");
     if (!t) return;
 
     if (t.matches("[data-print]")) { window.print(); return; }
@@ -1248,6 +1364,23 @@
       return;
     }
     if (t.matches("[data-modal-add]")) { addCustomToCart(); return; }
+    if (t.matches("[data-modal-more-crepa]")) { addCustomToCart({ next: "more" }); return; }
+    if (t.matches("[data-modal-picker]")) { addCustomToCart({ next: "picker" }); return; }
+
+    if (t.matches("[data-picker-add]")) {
+      const p = byId[t.dataset.pickerAdd];
+      if (!p) return;
+      if (p.kind) { closePicker(); openCustom(p.id); }
+      else {
+        addToCart(p.id);
+        paintPickerCart();
+        t.classList.add("is-added");
+        setTimeout(() => t.classList.remove("is-added"), 700);
+      }
+      return;
+    }
+    if (t.matches("[data-close-picker]")) { closePicker(); return; }
+    if (t.matches("[data-open-cart]")) { closePicker(); openDrawer($("#cart-drawer")); return; }
     if (t.matches("[data-addon]")) {
       const id = t.dataset.addon;
       if (t.checked) custom.extras.push({ id, option: "" });
@@ -1261,7 +1394,7 @@
       if (!r) return;
       const p = byId[r.id];
       /* Bebidas con sabor y crepas: reabre el modal en blanco para la nueva pieza. */
-      if (p && (p.flavors || p.askFlavor)) {
+      if (p && (p.flavors || p.askFlavor || p.kind === "crepa")) {
         openCustom(p.id, { qty: 1, variant: r.v, format: r.format });
         return;
       }
@@ -1291,7 +1424,6 @@
       return;
     }
 
-    if (t.matches("[data-upload]")) { pickImage(t.dataset.upload); return; }
     if (t.matches("[data-close-drawer]")) { closeDrawers(); return; }
     if (t.matches("[data-noop]")) { e.preventDefault(); toast("Enlace no disponible"); return; }
 
@@ -1321,6 +1453,7 @@
   });
 
   document.addEventListener("input", e => {
+    if (e.target.id === "picker-search") { filterPicker(); return; }
     if (e.target.id !== "modal-flavor-text") return;
     custom.flavorText = e.target.value;
     syncCustom();
@@ -1329,6 +1462,11 @@
   const customDialog = $("#custom-dialog");
   customDialog?.addEventListener("click", e => {
     if (e.target === customDialog) closeCustom();
+  });
+
+  const pickerDialog = $("#picker-dialog");
+  pickerDialog?.addEventListener("click", e => {
+    if (e.target === pickerDialog) closePicker();
   });
 
   $("#search").addEventListener("input", e => {
@@ -1365,30 +1503,6 @@
   $("#f-font").addEventListener("change", e => setTheme({ font: e.target.value, preset: "" }));
   $("#m-dark").addEventListener("change", e => setTheme({ dark: e.target.checked }));
 
-  /* ---------------- Imágenes ---------------- */
-  let picker;
-  function pickImage(id) {
-    picker?.remove();
-    picker = document.createElement("input");
-    picker.type = "file";
-    picker.accept = "image/*";
-    picker.hidden = true;
-    document.body.appendChild(picker);
-    picker.addEventListener("change", () => {
-      const file = picker.files?.[0];
-      if (!file) return;
-      const fr = new FileReader();
-      fr.onload = () => {
-        state.images[id] = fr.result;
-        write(LS.img, state.images);
-        route();
-        toast("Imagen actualizada");
-      };
-      fr.readAsDataURL(file);
-    });
-    picker.click();
-  }
-
   /* ---------------- Archivos opcionales (PNG reales) ---------------- */
   const exists = async url => {
     try {
@@ -1404,6 +1518,8 @@
   })();
 
   /* ---------------- Init ---------------- */
+  write(LS.cart, state.cart);
+  try { localStorage.removeItem("coffeetime.img.v1"); } catch { /* sin almacenamiento */ }
   buildPresets();
   applyTheme();
   buildOrderPlaces();

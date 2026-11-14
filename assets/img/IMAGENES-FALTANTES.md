@@ -2,7 +2,9 @@
 
 El sitio ya apunta a los archivos WebP definitivos. **No hace falta editar código**:
 si guardas la imagen con el nombre exacto de esta lista, aparece automáticamente.
-Mientras no exista, se muestra la ilustración SVG de respaldo.
+Mientras no exista, se muestra la ilustración SVG de respaldo. La única excepción
+es la galería del carrusel de **Arma tu crepa**, que se define en el arreglo
+`gallery` de `assets/data.js`.
 
 ## Formato recomendado
 
@@ -21,7 +23,7 @@ Mientras no exista, se muestra la ilustración SVG de respaldo.
 
 ---
 
-## /* ! 1. Fotos de productos — 35 archivos*/
+## /* ! 1. Fotos de productos — 33 archivos*/
 
 Ruta: `assets/img/productos/`
 
@@ -50,21 +52,22 @@ Ruta: `assets/img/productos/`
 | 21 | `shaker-tisanas.webp` | Shaker Tisanas | Frías |
 | 22 | `shaker-latte.webp` | Shaker Latte | Frías |
 | 23 | `shaker-mokachino.webp` | Shaker Mokachino | Frías |
-| 24 | `crepa-dulce.webp` | Crepa dulce | Crepas |
-| 25 | `crepa-fruta.webp` | Crepa de fruta | Crepas |
-| 26 | `crepa-salada.webp` | Crepa salada | Crepas |
-| 27 | `croissant-rol.webp` | Croissant rol | Crepas |
-| 28 | `sandwich.webp` | Sándwich | Comida |
-| 29 | `chapata.webp` | Chapata | Comida |
-| 30 | `molletes.webp` | Molletes | Comida |
-| 31 | `ensalada.webp` | Ensalada | Comida |
-| 32 | `extra-crepa.webp` | Ingrediente extra para crepa | Extras (opcional) |
-| 33 | `perlas.webp` | Perlas explosivas | Extras (opcional) |
-| 34 | `jarabe.webp` | Jarabe 1 oz | Extras (opcional) |
-| 35 | `portavaso.webp` | Portavaso | Extras (opcional) |
+| 24 | `arma-tu-crepa.webp` | Arma tu crepa | Crepas |
+| 25 | `croissant-rol.webp` | Croissant rol | Comida y otros |
+| 26 | `sandwich.webp` | Sándwich | Comida y otros |
+| 27 | `chapata.webp` | Chapata | Comida y otros |
+| 28 | `molletes.webp` | Molletes | Comida y otros |
+| 29 | `ensalada.webp` | Ensalada | Comida y otros |
+| 30 | `extra-crepa.webp` | Ingrediente extra para crepa | Extras (opcional) |
+| 31 | `perlas.webp` | Perlas explosivas | Extras (opcional) |
+| 32 | `jarabe.webp` | Jarabe 1 oz | Extras (opcional) |
+| 33 | `portavaso.webp` | Portavaso | Extras (opcional) |
 
 > Los cuatro extras pueden quedarse con su SVG; no es obligatorio fotografiarlos.
 > Hoy **ninguna** foto de producto está cargada: todas usan la ilustración de respaldo.
+> La galería del carrusel de **Arma tu crepa** usa las ilustraciones
+> `arma-tu-crepa-1.svg`, `-2.svg` y `-3.svg`; si consigues fotos reales, reemplaza
+> esas rutas en el arreglo `gallery` de `assets/data.js`.
 
 ---
 
@@ -106,9 +109,9 @@ cambiarlos; si algún día quieres fotos por categoría, se puede ajustar el có
 
 ## Orden sugerido para ir creando
 
-1. **Favoritos de la portada:** `latte`, `frappe-basico`, `crepa-dulce`,
+1. **Favoritos de la portada:** `latte`, `frappe-basico`, `arma-tu-crepa`,
    `sandwich`, `soda-italiana`, `ensalada`.
-2. **Crepas y bebidas calientes** (las más pedidas).
+2. **Arma tu crepa y bebidas calientes** (las más pedidas).
 3. **Bebidas frías y shakers.**
 4. **Comida y extras.**
 

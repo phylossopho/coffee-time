@@ -327,7 +327,7 @@
               <a class="car-slide-link" href="${href}" tabindex="${i === 0 ? "0" : "-1"}"
                  aria-label="Ver ${esc(p.title)}">
                 <div class="car-bg" aria-hidden="true" style="background-image:url('${p.img}')"></div>
-                <img src="${promoImg(p)}" alt="${esc(p.title)}" decoding="async" ${i === 0 ? 'fetchpriority="high"' : ""}
+                <img src="${promoImg(p)}" alt="${esc(p.title)}" decoding="async" draggable="false" ${i === 0 ? 'fetchpriority="high"' : ""}
                      onerror="this.onerror=null;this.src='${promoFallback(p)}'">
               </a>
             </div>`;
@@ -554,7 +554,7 @@
             <a class="car-slide-link" href="#/producto/${s.p.id}" tabindex="${i === 0 ? "0" : "-1"}"
                aria-label="Ver ficha de ${esc(s.p.name)}">
               <div class="car-bg" aria-hidden="true" style="background-image:url('${s.src}')"></div>
-              <img src="${s.src}" alt="${esc(s.p.name)} — vista ${s.si + 1}" decoding="async">
+              <img src="${s.src}" alt="${esc(s.p.name)} — vista ${s.si + 1}" decoding="async" draggable="false">
             </a>
           </div>`).join("")}
         </div>
@@ -1133,27 +1133,50 @@
 
   /* Deslizamiento con el dedo o el mouse (flechas y puntos siguen funcionando). */
   function addSwipe(el, onNext, onPrev) {
-    let x0 = null, y0 = 0, swiped = false;
+    /* No se captura el puntero al presionar: eso desviaría el "click" al
+       contenedor y dejaría sin funcionar las flechas y la imagen enlazada.
+       Solo se captura cuando el gesto ya se movió en horizontal. */
+    let x0 = null, y0 = 0, pid = null, swiping = false, swiped = false;
+    const reset = () => { x0 = null; pid = null; swiping = false; };
+
     el.addEventListener("pointerdown", e => {
       if (e.pointerType === "mouse" && e.button !== 0) return;
       x0 = e.clientX;
       y0 = e.clientY;
-      try { el.setPointerCapture(e.pointerId); } catch { /* sin captura */ }
+      pid = e.pointerId;
+      swiping = false;
     });
-    el.addEventListener("pointerup", e => {
-      if (x0 == null) return;
+
+    el.addEventListener("pointermove", e => {
+      if (x0 == null || e.pointerId !== pid || swiping) return;
       const dx = e.clientX - x0;
       const dy = e.clientY - y0;
-      x0 = null;
-      if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy) * 1.2) return;
+      if (Math.abs(dx) < 12 || Math.abs(dx) <= Math.abs(dy)) return;
+      swiping = true;
+      try { el.setPointerCapture(pid); } catch { /* sin captura */ }
+    });
+
+    el.addEventListener("pointerup", e => {
+      if (x0 == null || e.pointerId !== pid) return;
+      const dx = e.clientX - x0;
+      const dy = e.clientY - y0;
+      const dragged = swiping;
+      reset();
+      if (!dragged || Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy) * 1.2) return;
       /* Evita que el deslizamiento termine abriendo la ficha del producto. */
       swiped = true;
-      setTimeout(() => { swiped = false; }, 350);
+      setTimeout(() => { swiped = false; }, 400);
       if (dx < 0) onNext(); else onPrev();
     });
-    el.addEventListener("pointercancel", () => { x0 = null; });
+
+    el.addEventListener("pointercancel", reset);
+    /* El arrastre nativo de la imagen cortaría el gesto. */
+    el.addEventListener("dragstart", e => e.preventDefault());
     el.addEventListener("click", e => {
-      if (swiped) e.preventDefault();
+      if (swiped) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
     }, true);
   }
 

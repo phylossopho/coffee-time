@@ -14,8 +14,6 @@
     <stop offset="1" stop-color="#f0e7da"/>
   </radialGradient>
 </defs>
-<rect width="400" height="400" fill="url(#bg3)"/>
-<circle cx="200" cy="205" r="150" fill="#ffffff" opacity=".3"/>
 <ellipse cx="200" cy="318" rx="132" ry="22" fill="#2a201a" opacity=".14"/>
 <ellipse cx="200" cy="300" rx="140" ry="58" fill="url(#plate3)"/>
 <ellipse cx="200" cy="300" rx="140" ry="58" fill="none" stroke="#e3d7c5" stroke-width="3"/>

@@ -186,6 +186,8 @@ p { margin: 0 0 1em; }
   position: absolute; inset: 0; z-index: 1;
   width: 100%; height: 100%; object-fit: contain;
   filter: drop-shadow(0 10px 26px rgba(20, 16, 12, .22));
+  /* Evita el arrastre nativo de la imagen, que cancela el deslizamiento. */
+  -webkit-user-drag: none; user-select: none;
 }
 
 .car-btn {
@@ -239,6 +241,16 @@ p { margin: 0 0 1em; }
   width: 100%; max-width: 100%;
   height: clamp(200px, 30vh, 440px);
   aspect-ratio: auto;
+  /* Mismo degradado que las vistas SVG: evita el borde duro del recuadro. */
+  background: radial-gradient(92% 92% at 28% 18%, #f7ecdd, #e6d2ba);
+}
+.crepa-carousel .car-bg {
+  inset: 0;
+  background-size: 46% auto;
+  background-position: center;
+  filter: blur(52px) saturate(1.1);
+  opacity: .55;
+  transform: none;
 }
 .crepa-bar { width: 100%; }
 .crepa-bar .car-info strong a { color: inherit; }

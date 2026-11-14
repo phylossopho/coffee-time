@@ -487,7 +487,7 @@ p { margin: 0 0 1em; }
   transition: transform .18s ease, box-shadow .18s ease;
 }
 .promo:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
-.promo-media { position: relative; aspect-ratio: 6 / 5; background: var(--surface-2); }
+.promo-media { position: relative; display: block; aspect-ratio: 6 / 5; background: var(--surface-2); }
 .promo-media img { width: 100%; height: 100%; object-fit: cover; }
 .promo-badge {
   position: absolute; top: 12px; left: 12px;
@@ -497,6 +497,8 @@ p { margin: 0 0 1em; }
 }
 .promo-body { padding: 14px 16px 18px; display: flex; flex-direction: column; gap: 4px; flex: 1; }
 .promo-body h3 { font-size: 1.05rem; margin: 0; }
+.promo-body h3 a { color: inherit; }
+.promo-body h3 a:hover { color: var(--primary); }
 .promo-body p { color: var(--muted); font-size: .85rem; margin: 0; flex: 1; }
 .promo-price { font-weight: 800; font-size: 1.2rem; margin-top: 8px; }
 .link-more { color: var(--primary); font-weight: 700; font-size: .9rem; }
@@ -519,6 +521,21 @@ p { margin: 0 0 1em; }
 .promo-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px; }
 .promo-foot .promo-price { margin-top: 0; }
 .promo-foot .btn { flex: none; }
+
+/* ---------- Ficha de promoción ---------- */
+.promo-detail-media { position: relative; aspect-ratio: 6 / 5; }
+.promo-detail-media .promo-badge { top: 14px; left: 14px; }
+.promo-includes {
+  margin: 16px 0 4px; padding: 12px 14px; border-radius: 12px;
+  background: color-mix(in srgb, var(--accent) 16%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--accent) 38%, var(--line));
+}
+.promo-includes strong {
+  display: block; font-size: .74rem; letter-spacing: .07em;
+  text-transform: uppercase; color: var(--ink);
+}
+.promo-includes ul { margin: 6px 0 0; padding-left: 18px; font-size: .88rem; color: var(--muted); }
+.promo-includes li + li { margin-top: 3px; }
 
 /* ---------- Contacto ---------- */
 .contact { padding-top: 10px; padding-bottom: 60px; }

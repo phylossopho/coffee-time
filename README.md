@@ -207,8 +207,9 @@ enfocar, y tiene flechas, puntos, botón de pausa (❙❙ / ▶) y **deslizamien
 con el dedo o el mouse. Cada slide tiene su botón **Pedir** que abre WhatsApp
 con esa promo.
 
-Al tocar la imagen se abre la ficha del producto relacionado (`productId`); si
-la promo no tiene uno, lleva a `#/promociones`.
+Al tocar la imagen se abre la **ficha de esa promoción** (`#/promo/<id>`), donde
+están su precio, lo que incluye, el botón de WhatsApp y el enlace al producto
+relacionado.
 
 El alto se adapta a la pantalla con `clamp(300px, 44vh, 450px)` y el póster se
 muestra completo (`object-fit: contain`) sobre un fondo desenfocado del mismo
@@ -220,7 +221,29 @@ arte, así no se recorta en pantallas pequeñas.
 ```
 
 Para sumar una promo al carrusel: agrega su imagen, ponle `hero: true` y, si
-aplica, un `productId` para que la imagen abra esa ficha.
+aplica, un `productId` para enlazar el producto relacionado desde la ficha.
+
+## Ficha de promoción
+
+Cada promo tiene su propia página en `#/promo/<id>` (por ejemplo `#/promo/p1`).
+Muestra la imagen completa, la etiqueta (`badge`), el título, la descripción, el
+precio, lo que incluye, un botón de **Pedir por WhatsApp** con el texto de esa
+promo y un enlace al producto relacionado. Al final aparecen otras promociones.
+
+Se llega a ella desde el carrusel de la portada y desde las tarjetas de
+`#/promociones`.
+
+```js
+{ id: "p1", title: "Capuchino grande + sándwich", price: 100,
+  note: "Llévate un capuchino grande y un sándwich por solo $100.",
+  includes: ["Capuchino grande", "Sándwich a elegir"],
+  hero: true, productId: "capuccino",
+  img: "assets/img/promociones/promo-1.webp", badge: "Combo" }
+```
+
+- `note`: frase corta que se ve en las tarjetas y como introducción en la ficha.
+- `includes`: lista opcional de lo que incluye la promo.
+- `productId`: producto al que lleva el botón **Ver …** de la ficha.
 
 ## Imágenes
 
@@ -228,12 +251,12 @@ aplica, un `productId` para que la imagen abra esa ficha.
 |---|---|---|
 | `assets/img/logo.png` | logo del header | cuadrada, 256×256 |
 | `assets/img/pattern.png` | fondo de doodles (cover, sin repetir) | 1104×1552 |
-| `assets/img/promociones/promo-1..9.webp` | las nueve promociones | vertical 4:5 |
+| `assets/img/promociones/promo-1..9.webp` | las nueve promociones | horizontal 6:5 |
 | `assets/img/productos/<id>.webp` | fotos de producto | cuadrada 1:1 |
 | `assets/img/qr/*.svg` | letreros QR | cuadrado |
 
-Las tarjetas de promoción usan formato vertical 4:5 y cargan directamente el
-WebP. El patrón se pinta con `opacity: .055`.
+Las tarjetas y la ficha de promoción usan formato horizontal 6:5 y cargan
+directamente el WebP. El patrón se pinta con `opacity: .055`.
 
 ## Fotos de producto
 
@@ -293,6 +316,7 @@ muestran en la sección **Visítanos** del inicio y en `#/contacto`.
 | `#/categoria/<id>` | categoría (`calientes`, `frias`, `crepas`, `comida`, `extras`) |
 | `#/producto/<id>` | ficha con variantes, sabores y cantidad (en crepas: elegir ingredientes) |
 | `#/promociones` | las nueve promociones completas |
+| `#/promo/<id>` | ficha de una promoción con precio, incluye y botón de WhatsApp |
 | `#/contacto` | dirección, horarios, redes y WhatsApp |
 | `#/qr` | centro de QR y letreros imprimibles |
 | `#/mesa/<n>` | menú con la mesa `n` preseleccionada |

@@ -4,6 +4,7 @@
 
   const MENU = window.MENU;
   const byId = Object.fromEntries(MENU.products.map(p => [p.id, p]));
+  const promoById = Object.fromEntries(MENU.promos.map(p => [p.id, p]));
   const catById = Object.fromEntries(MENU.categories.map(c => [c.id, c]));
   const addonById = Object.fromEntries(MENU.customize.addons.map(a => [a.id, a]));
   const crepaCfg = MENU.customize.crepa;
@@ -321,11 +322,11 @@
            aria-roledescription="carrusel" aria-label="Promociones destacadas">
         <div class="car-track">
           ${list.map((p, i) => {
-            const href = p.productId && byId[p.productId] ? `#/producto/${p.productId}` : "#/promociones";
+            const href = `#/promo/${p.id}`;
             return `<div class="car-slide${i === 0 ? " is-active" : ""}" data-slide="${i}"
                aria-hidden="${i === 0 ? "false" : "true"}">
               <a class="car-slide-link" href="${href}" tabindex="${i === 0 ? "0" : "-1"}"
-                 aria-label="Ver ${esc(p.title)}">
+                 aria-label="Ver la promoción ${esc(p.title)}">
                 <div class="car-bg" aria-hidden="true" style="background-image:url('${p.img}')"></div>
                 <img src="${promoImg(p)}" alt="${esc(p.title)}" decoding="async" draggable="false" ${i === 0 ? 'fetchpriority="high"' : ""}
                      onerror="this.onerror=null;this.src='${promoFallback(p)}'">
@@ -375,6 +376,25 @@
     </section>`;
   }
 
+  function promoCard(p) {
+    return `<article class="promo">
+      <a class="promo-media" href="#/promo/${p.id}" aria-label="Ver la promoción ${esc(p.title)}">
+        <img src="${promoImg(p)}" alt="${esc(p.title)}" loading="lazy"
+             onerror="this.onerror=null;this.src='${promoFallback(p)}'">
+        <span class="promo-badge">${esc(p.badge)}</span>
+      </a>
+      <div class="promo-body">
+        <h3><a href="#/promo/${p.id}">${esc(p.title)}</a></h3>
+        <p>${esc(p.note)}</p>
+        <div class="promo-foot">
+          <span class="promo-price">${money(p.price)}</span>
+          <a class="btn btn-ghost btn-sm" target="_blank" rel="noopener"
+             href="${waLink(`¡Hola COFFEE TIME! Me interesa la promo: ${p.title} (${money(p.price)}).`)}">Pedir</a>
+        </div>
+      </div>
+    </article>`;
+  }
+
   function promosSection(full = false) {
     const list = full ? MENU.promos : MENU.promos.slice(0, 4);
     return `<section class="wrap promos-section">
@@ -383,22 +403,7 @@
         <a class="link-more" href="#/promociones">Ver todas →</a>
       </div>`}
       <div class="promos">
-        ${list.map(p => `<article class="promo">
-          <div class="promo-media">
-            <img src="${promoImg(p)}" alt="${esc(p.title)}" loading="lazy"
-                 onerror="this.onerror=null;this.src='${promoFallback(p)}'">
-            <span class="promo-badge">${esc(p.badge)}</span>
-          </div>
-          <div class="promo-body">
-            <h3>${esc(p.title)}</h3>
-            <p>${esc(p.note)}</p>
-            <div class="promo-foot">
-              <span class="promo-price">${money(p.price)}</span>
-              <a class="btn btn-ghost btn-sm" target="_blank" rel="noopener"
-                 href="${waLink(`¡Hola COFFEE TIME! Me interesa la promo: ${p.title} (${money(p.price)}).`)}">Pedir</a>
-            </div>
-          </div>
-        </article>`).join("")}
+        ${list.map(promoCard).join("")}
       </div>
     </section>`;
   }
@@ -661,6 +666,43 @@
         </div>
       </section>
       ${rel.length ? `<div class="wrap related"><h2>También te puede gustar</h2></div>${grid(rel)}` : ""}`;
+  }
+
+  function promoView(id) {
+    const p = promoById[id];
+    if (!p) return notFound();
+    const prod = p.productId ? byId[p.productId] : null;
+    const rel = MENU.promos.filter(x => x.id !== p.id).slice(0, 3);
+    const msg = `¡Hola COFFEE TIME! Me interesa la promo: ${p.title} (${money(p.price)}).`;
+    return `<div class="wrap crumbs"><a href="#/">Inicio</a> / <a href="#/promociones">Promociones</a> / ${esc(p.title)}</div>
+      <section class="wrap product promo-detail">
+        <div class="product-media promo-detail-media">
+          <span class="promo-badge">${esc(p.badge)}</span>
+          <img class="photo" src="${promoImg(p)}" alt="${esc(p.title)}"
+               onerror="this.onerror=null;this.src='${promoFallback(p)}'">
+        </div>
+        <div class="product-info">
+          <span class="eyebrow">Promoción</span>
+          <h1>${esc(p.title)}</h1>
+          <p class="lead">${esc(p.note)}</p>
+          ${p.includes?.length ? `<div class="promo-includes">
+            <strong>Incluye</strong>
+            <ul>${p.includes.map(i => `<li>${esc(i)}</li>`).join("")}</ul>
+          </div>` : ""}
+          <div class="product-price">${money(p.price)}</div>
+          <div class="product-actions">
+            <a class="btn btn-primary" href="${waLink(msg)}" target="_blank" rel="noopener">Pedir por WhatsApp</a>
+            ${prod ? `<a class="btn btn-ghost" href="#/producto/${prod.id}">${prod.kind === "crepa" ? "Elegir ingredientes" : `Ver ${esc(prod.name)}`}</a>` : ""}
+          </div>
+          <div class="meta">
+            <div><strong>Vigencia</strong>En sucursal, hasta agotar existencias</div>
+            <div><strong>Pedidos</strong>${esc(MENU.phone)}</div>
+            <div><strong>Cómo pedir</strong>Por WhatsApp o en sucursal</div>
+          </div>
+        </div>
+      </section>
+      ${rel.length ? `<div class="wrap related"><h2>Otras promociones</h2></div>
+        <section class="wrap promos">${rel.map(promoCard).join("")}</section>` : ""}`;
   }
 
   function promosView() {
@@ -1318,6 +1360,11 @@
       title = `${p?.name ?? "Producto"} — COFFEE TIME`;
     }
     else if (kind === "promociones") { html = promosView(); title = "Promociones — COFFEE TIME"; }
+    else if (kind === "promo") {
+      const p = promoById[id];
+      html = promoView(id);
+      title = `${p?.title ?? "Promoción"} — COFFEE TIME`;
+    }
     else if (kind === "contacto") { html = contactView(); title = "Contacto — COFFEE TIME"; }
     else if (kind === "qr") { html = qrView(); title = "QR y letreros — COFFEE TIME"; }
     else if (kind === "mesa") {

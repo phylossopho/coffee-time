@@ -23,7 +23,7 @@ es la galería del carrusel de **Arma tu crepa**, que se define en el arreglo
 
 ---
 
-## /* ! 1. Fotos de productos — 33 archivos*/
+## /* ! 1. Fotos de productos — 32 archivos*/
 
 Ruta: `assets/img/productos/`
 
@@ -58,12 +58,11 @@ Ruta: `assets/img/productos/`
 | 27 | `chapata.webp` | Chapata | Comida y otros |
 | 28 | `molletes.webp` | Molletes | Comida y otros |
 | 29 | `ensalada.webp` | Ensalada | Comida y otros |
-| 30 | `extra-crepa.webp` | Ingrediente extra para crepa | Extras (opcional) |
-| 31 | `perlas.webp` | Perlas explosivas | Extras (opcional) |
-| 32 | `jarabe.webp` | Jarabe 1 oz | Extras (opcional) |
-| 33 | `portavaso.webp` | Portavaso | Extras (opcional) |
+| 30 | `perlas.webp` | Perlas explosivas | Extras (opcional) |
+| 31 | `jarabe.webp` | Jarabe 1 oz | Extras (opcional) |
+| 32 | `portavaso.webp` | Portavaso | Extras (opcional) |
 
-> Los cuatro extras pueden quedarse con su SVG; no es obligatorio fotografiarlos.
+> Los tres extras pueden quedarse con su SVG; no es obligatorio fotografiarlos.
 > Hoy **ninguna** foto de producto está cargada: todas usan la ilustración de respaldo.
 > La galería del carrusel de **Arma tu crepa** usa las ilustraciones
 > `arma-tu-crepa-1.svg`, `-2.svg` y `-3.svg`; si consigues fotos reales, reemplaza

@@ -16,9 +16,9 @@ Abre <http://localhost:4173/>. También funciona abriendo `index.html` directame
 ## Estructura
 
 ```
-index.html            shell: header, main vacío, drawers de carrito y tema, modal de personalización
+index.html            shell: header, main vacío, drawers de carrito y tema, modales de producto y promo
 assets/data.js        ← edita aquí categorías, productos, precios, sabores, extras, promos, mesas y QR
-assets/app.js         router, carrito con personalización, modal, carrusel, tema, pedido por WhatsApp
+assets/app.js         router, carrito con personalización, flujo de promos, modal, carrusel, tema y pedido por WhatsApp
 assets/styles.css     tema por variables CSS + layout responsive + patrón de fondo + modal + QR
 assets/img/logo.png   logo real de COFFEE TIME (header)
 assets/img/pattern.png fondo de doodles (arte original, fondo transparente)
@@ -31,7 +31,7 @@ assets/img/IMAGENES-FALTANTES.md  lista de fotos, nombres y medidas
 
 ## Portada y menú
 
-La portada **no** muestra los 33 productos: es un escaparate compacto con
+La portada **no** muestra los 32 productos: es un escaparate compacto con
 hero + carrusel, tarjetas de categoría, seis favoritos y contacto. El menú
 completo vive en `#/menu`, con buscador y chips por categoría.
 
@@ -158,7 +158,12 @@ opciones **Para llevar**, **Mesa 1** y **Mesa 2**. La elección se guarda en
 `localStorage` y se agrega como `Lugar:` en el mensaje de WhatsApp, así que un
 mismo QR puede servir para todo el local.
 
-La vista `#/qr` reúne seis letreros listos para imprimir:
+> **Oculto por ahora.** El centro de QR y letreros (`#/qr`) está desactivado:
+> el enlace del pie está comentado en `index.html` y `SHOW_QR = false` en
+> `assets/app.js`, así que `#/qr` muestra “No encontrado”. Para reactivarlo,
+> pon `SHOW_QR = true` y descomenta el enlace del pie.
+
+La vista `#/qr` reúne seis letreros listos para imprimir (cuando está activa):
 
 | Letrero | QR apunta a |
 |---|---|
@@ -204,12 +209,11 @@ las nuevas imágenes.
 La portada muestra un carrusel con las promociones marcadas con `hero: true` en
 `assets/data.js`. Cambia solo cada 5 segundos, se detiene al pasar el mouse o
 enfocar, y tiene flechas, puntos, botón de pausa (❙❙ / ▶) y **deslizamiento**
-con el dedo o el mouse. Cada slide tiene su botón **Pedir** que abre WhatsApp
-con esa promo.
+con el dedo o el mouse. Cada slide tiene su botón **Realizar pedido**, que abre
+el flujo de esa promoción y la deja lista en el carrito.
 
 Al tocar la imagen se abre la **ficha de esa promoción** (`#/promo/<id>`), donde
-están su precio, lo que incluye, el botón de WhatsApp y el enlace al producto
-relacionado.
+están su precio, lo que incluye y el botón **Realizar pedido**.
 
 El alto se adapta a la pantalla con `clamp(300px, 44vh, 450px)` y el póster se
 muestra completo (`object-fit: contain`) sobre un fondo desenfocado del mismo
@@ -221,14 +225,14 @@ arte, así no se recorta en pantallas pequeñas.
 ```
 
 Para sumar una promo al carrusel: agrega su imagen, ponle `hero: true` y, si
-aplica, un `productId` para enlazar el producto relacionado desde la ficha.
+aplica, un `productId` para identificar el producto principal.
 
 ## Ficha de promoción
 
 Cada promo tiene su propia página en `#/promo/<id>` (por ejemplo `#/promo/p1`).
 Muestra la imagen completa, la etiqueta (`badge`), el título, la descripción, el
-precio, lo que incluye, un botón de **Pedir por WhatsApp** con el texto de esa
-promo y un enlace al producto relacionado. Al final aparecen otras promociones.
+precio, lo que incluye y un botón **Realizar pedido** que arma la promo en el
+carrito. Al final aparecen otras promociones.
 
 Se llega a ella desde el carrusel de la portada y desde las tarjetas de
 `#/promociones`.
@@ -243,7 +247,44 @@ Se llega a ella desde el carrusel de la portada y desde las tarjetas de
 
 - `note`: frase corta que se ve en las tarjetas y como introducción en la ficha.
 - `includes`: lista opcional de lo que incluye la promo.
-- `productId`: producto al que lleva el botón **Ver …** de la ficha.
+- `productId`: producto principal de la promo (referencia; el flujo de pedido se
+  define en `flow`).
+
+## Promociones en el carrito
+
+Cada promo se arma con un flujo propio y entra al carrito **con su precio de
+promoción**, no con la suma de los productos. Los flujos viven al final de
+`assets/data.js`:
+
+```js
+p4: {
+  validity: "Válida solo martes y jueves",
+  units: [
+    { productId: "smoothie", pick: "flavor", label: "Smoothie 1" },
+    { productId: "smoothie", pick: "flavor", label: "Smoothie 2" }
+  ]
+}
+```
+
+- `units`: los productos que forman la promo. `variant` fija un tamaño por
+  índice (0 = primera variante del producto).
+- `pick: "flavor"`: pide un sabor por unidad. Si hay dos o más, el modal avanza
+  paso a paso: sabor 1 → **Confirmar sabor** → sabor 2 → **Agregar a la
+  canasta**.
+- `validity`: recordatorio opcional que se muestra en el carrito y en el
+  mensaje de WhatsApp (por ejemplo, los días en que aplica).
+- Sin `pick`, el modal muestra los productos con su **precio individual**, el
+  **precio de promoción** y cuánto se ahorra; el botón es **Agregar al carrito**.
+- `p3` (crepa) abre el modal de **Arma tu crepa**, porque los ingredientes se
+  eligen ahí; la regla de 3 ingredientes por $70 ya aplica el precio.
+
+Las promos se agregan como una sola línea del carrito, con la etiqueta
+**Promo**, el detalle de sus productos y sabores, y el precio cerrado. El botón
+**+** de una promo con sabores vuelve a abrir el flujo para elegir los de la
+nueva pieza; en las que no piden sabor solo sube la cantidad.
+
+Al agregar cualquier cosa, el botón del carrito se sacude y queda resaltado
+mientras haya un pedido: es el siguiente paso de la compra.
 
 ## Imágenes
 
@@ -260,7 +301,7 @@ directamente el WebP. El patrón se pinta con `opacity: .055`.
 
 ## Fotos de producto
 
-El sitio ya apunta a `assets/img/productos/<id>.webp` para los 33 productos. No
+El sitio ya apunta a `assets/img/productos/<id>.webp` para los 32 productos. No
 hace falta editar código: guarda la imagen con el nombre exacto y aparece sola.
 Mientras no exista, la tarjeta usa la ilustración vectorial de respaldo.
 
@@ -283,8 +324,9 @@ Si prefieres otra ruta o formato, edita el campo `photo` del producto:
 
 El botón **Confirmar pedido** del carrito arma un mensaje con cada producto,
 su tamaño/formato, sabores o ingredientes, extras, cantidad, el total y el
-lugar elegido, y abre WhatsApp al 55 6692 2796. Cada promo tiene además su
-propio botón **Pedir** con el texto de esa promoción.
+lugar elegido, y abre WhatsApp al 55 6692 2796. Cada promo entra al carrito con
+su propio flujo y su precio cerrado, así que el mensaje ya lleva el total
+correcto.
 
 Las líneas del carrito se separan por producto, variante, sabores, extras y
 formato: dos cafés iguales con distinto jarabe quedan como dos líneas.
@@ -316,9 +358,9 @@ muestran en la sección **Visítanos** del inicio y en `#/contacto`.
 | `#/categoria/<id>` | categoría (`calientes`, `frias`, `crepas`, `comida`, `extras`) |
 | `#/producto/<id>` | ficha con variantes, sabores y cantidad (en crepas: elegir ingredientes) |
 | `#/promociones` | las nueve promociones completas |
-| `#/promo/<id>` | ficha de una promoción con precio, incluye y botón de WhatsApp |
+| `#/promo/<id>` | ficha de una promoción con precio, incluye y botón Realizar pedido |
 | `#/contacto` | dirección, horarios, redes y WhatsApp |
-| `#/qr` | centro de QR y letreros imprimibles |
+| ~~`#/qr`~~ | centro de QR y letreros — **oculto por ahora** (`SHOW_QR = false`) |
 | `#/mesa/<n>` | menú con la mesa `n` preseleccionada |
 
 ## Pendientes con el dueño

@@ -38,7 +38,7 @@ window.MENU = {
     { id: "frias",     name: "Bebidas frías",     icon: "iced",     blurb: "Sodas, smoothies, frappés, malteadas y shakers." },
     { id: "crepas",    name: "Crepas",            icon: "crepe",    blurb: "Arma la tuya: dulce, de fruta o salada, con los ingredientes que tú elijas." },
     { id: "comida",    name: "Comida y otros",    icon: "food",     blurb: "Sándwich, chapata, molletes, ensalada y otros antojos." },
-    { id: "extras",    name: "Extras",            icon: "beans",    blurb: "Para personalizar tu bebida o tu crepa." }
+    { id: "extras",    name: "Extras",            icon: "beans",    blurb: "Para personalizar tu bebida favorita." }
   ],
 
   /* CONFIG Personalización de productos (crepas, bebidas y sabores)
@@ -202,9 +202,6 @@ window.MENU = {
       flavors: ["Crema pastelera", "Crema de avellana"] },
 
     /* ---------------- Extras ---------------- */
-    { id: "extra-crepa", cat: "extras", name: "Ingrediente extra para crepa", icon: "crepe", tag: "",
-      desc: "Agrega otro ingrediente a tu crepa.", price: 10,
-      photo: "assets/img/productos/extra-crepa.webp" },
     { id: "perlas", cat: "extras", name: "Perlas explosivas", icon: "iced", tag: "",
       desc: "Topping para sodas, smoothies o frappés.", price: 15,
       photo: "assets/img/productos/perlas.webp" },
@@ -253,3 +250,57 @@ window.MENU = {
       productId: "latte", img: "assets/img/promociones/promo-8.webp", badge: "Promo" }
   ]
 };
+
+/* ! Flujos de pedido de las promociones.
+   Cada promo se arma con "units": los productos que la forman.
+   - productId: producto del menú.
+   - variant:   índice de la variante fija (0 = primera de data.js).
+   - label:     nombre corto para el carrito y el mensaje de WhatsApp.
+   - pick:      "flavor" pide un sabor por unidad (paso a paso).
+   - validity:  texto opcional que se recuerda en el carrito.
+   p3 abre directo el modal de "Arma tu crepa" porque los ingredientes se eligen ahí. */
+(() => {
+  const flows = {
+    p1: { units: [
+      { productId: "capuccino", variant: 3, label: "Capuccino grande" },
+      { productId: "sandwich", label: "Sándwich" }
+    ] },
+    p2: { units: [
+      { productId: "chapata", label: "Chapata" },
+      { productId: "capuccino", variant: 3, label: "Capuccino grande" }
+    ] },
+    p3: { crepa: true },
+    p4: {
+      validity: "Válida solo martes y jueves",
+      units: [
+        { productId: "smoothie", pick: "flavor", label: "Smoothie 1" },
+        { productId: "smoothie", pick: "flavor", label: "Smoothie 2" }
+      ]
+    },
+    p5: { units: [
+      { productId: "ensalada", label: "Ensalada" }
+    ] },
+    p6: {
+      validity: "Válida solo lunes y viernes",
+      units: [
+        { productId: "frappe-basico", pick: "flavor", label: "Frappé 1" },
+        { productId: "frappe-basico", pick: "flavor", label: "Frappé 2" }
+      ]
+    },
+    p7: {
+      units: [
+        { productId: "croissant-rol", pick: "flavor", label: "Croissant rol" }
+      ]
+    },
+    p8: { units: [
+      { productId: "latte", variant: 1, label: "Latte caliente grande" }
+    ] },
+    p9: {
+      units: [
+        { productId: "soda-italiana", pick: "flavor", label: "Soda 1" },
+        { productId: "soda-italiana", pick: "flavor", label: "Soda 2" }
+      ]
+    }
+  };
+  window.MENU.promos.forEach(p => { p.flow = flows[p.id] || null; });
+})();

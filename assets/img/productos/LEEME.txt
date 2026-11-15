@@ -32,7 +32,7 @@ Ids de productos:
   frappe-basico, frappe-especial, malteada, shaker-chai, shaker-americano,
   shaker-capuchino, shaker-tisanas, shaker-latte, shaker-mokachino,
   arma-tu-crepa, croissant-rol, sandwich, chapata, molletes, ensalada,
-  extra-crepa, perlas, jarabe, portavaso
+  perlas, jarabe, portavaso
 
 La lista completa con medidas y orden sugerido está en:
   assets/img/IMAGENES-FALTANTES.md

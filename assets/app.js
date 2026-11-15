@@ -11,6 +11,9 @@
 
   /* Selección curada para la portada: pocos productos, no los 35. */
   const FEATURED = ["latte", "frappe-basico", "arma-tu-crepa", "sandwich", "soda-italiana", "ensalada"];
+  /* Centro de QR y letreros: oculto por ahora. Pon true para volver a mostrarlo
+     (también hay que reactivar el enlace del pie en index.html). */
+  const SHOW_QR = false;
   const LS = { theme: "coffeetime.theme.v1", cart: "coffeetime.cart.v1", place: "coffeetime.place.v1" };
 
   const read = (key, fallback) => {
@@ -43,7 +46,9 @@
     /* Descarta líneas de versiones anteriores cuyos productos ya no existen. */
     cart: (() => {
       const saved = read(LS.cart, []);
-      return Array.isArray(saved) ? saved.filter(r => r && byId[r.id]) : [];
+      return Array.isArray(saved)
+        ? saved.filter(r => r && (r.promoId ? promoById[r.promoId]?.flow : byId[r.id]))
+        : [];
     })(),
     orderPlace: read(LS.place, "Para llevar"),
     query: "",
@@ -62,6 +67,9 @@
     flavorText: "",
     extras: []
   };
+
+  /* Estado del flujo de una promoción (paso a paso). */
+  const promoState = { id: null, step: 0, picks: [] };
 
   const $ = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
@@ -98,9 +106,12 @@
     return "";
   }
 
-  const rowKey = r => `${r.id}::${r.v ?? ""}::${(r.flavors || []).join("|")}::${(r.extras || []).map(e => `${e.id}${e.option ? "=" + e.option : ""}`).join("|")}::${r.format || ""}`;
+  const rowKey = r => r.promoId
+    ? `promo:${r.promoId}::${(r.units || []).map(u => `${u.productId}:${u.v ?? ""}:${u.flavor ?? ""}`).join("|")}::${r.price ?? ""}`
+    : `${r.id}::${r.v ?? ""}::${(r.flavors || []).join("|")}::${(r.extras || []).map(e => `${e.id}${e.option ? "=" + e.option : ""}`).join("|")}::${r.format || ""}`;
 
   function rowPrice(r) {
+    if (r.promoId) return promoById[r.promoId]?.price ?? r.price ?? 0;
     const p = byId[r.id];
     if (!p) return 0;
     let base;
@@ -112,6 +123,22 @@
   }
 
   function rowDetails(r) {
+    if (r.promoId) {
+      const promo = promoById[r.promoId];
+      return [
+        ...(r.units || []).map(u => {
+          const p = byId[u.productId];
+          let line = u.label || p?.name || u.productId;
+          if (u.v != null && p?.variants?.[u.v]) {
+            const variant = p.variants[u.v][0];
+            if (!line.toLowerCase().includes(variant.toLowerCase())) line += ` (${variant})`;
+          }
+          if (u.flavor) line += ` · ${u.flavor}`;
+          return line;
+        }),
+        ...(promo?.flow?.validity ? [promo.flow.validity] : [])
+      ];
+    }
     const p = byId[r.id];
     if (!p) return [];
     const out = [];
@@ -145,9 +172,11 @@
   const waLink = text => `${MENU.whatsapp}?text=${encodeURIComponent(text)}`;
   const orderMessage = () => {
     const lines = state.cart.map(i => {
-      const p = byId[i.id];
+      const p = i.promoId ? promoById[i.promoId] : byId[i.id];
       const details = rowDetails(i);
-      return `• ${i.qty} × ${p.name} — ${money(rowPrice(i) * i.qty)}${details.length ? "\n   " + details.join("\n   ") : ""}`;
+      const name = p?.title || p?.name || "Producto";
+      const label = i.promoId ? `Promo: ${name}` : name;
+      return `• ${i.qty} × ${label} — ${money(rowPrice(i) * i.qty)}${details.length ? "\n   " + details.join("\n   ") : ""}`;
     });
     return [
       "¡Hola COFFEE TIME! Quiero hacer este pedido:",
@@ -210,7 +239,7 @@
   }
 
   /* ---------------- Carrito ---------------- */
-  const cartCount = () => state.cart.reduce((n, i) => n + i.qty, 0);
+  const cartCount = () => state.cart.reduce((n, i) => n + i.qty * (i.promoId ? Math.max(1, i.units?.length || 1) : 1), 0);
   const cartTotal = () => state.cart.reduce((n, i) => n + rowPrice(i) * i.qty, 0);
 
   function addToCart(id, qty = 1, v = null, opts = {}) {
@@ -231,7 +260,46 @@
     else state.cart.push(row);
     write(LS.cart, state.cart);
     paintCart();
+    bumpCart();
     toast(`${p.name} agregado`);
+  }
+
+  /* Agrega una promoción completa al carrito, con sus productos y sabores. */
+  function addPromoToCart() {
+    const p = promoById[promoState.id];
+    if (!p?.flow) return;
+    const row = {
+      promoId: p.id,
+      qty: 1,
+      price: p.price,
+      units: p.flow.units.map((u, i) => ({
+        productId: u.productId,
+        v: u.variant ?? null,
+        flavor: u.pick ? promoState.picks[i] : "",
+        label: u.label || ""
+      }))
+    };
+    const key = rowKey(row);
+    const existing = state.cart.find(i => rowKey(i) === key);
+    if (existing) existing.qty += 1;
+    else state.cart.push(row);
+    write(LS.cart, state.cart);
+    paintCart();
+    bumpCart();
+    toast(`${p.title} agregado`);
+    closePromo();
+  }
+
+  /* Llamar la atención al carrito: ahí sigue el pedido. */
+  let bumpTimer;
+  function bumpCart() {
+    const btn = $("#cart-open");
+    if (!btn) return;
+    btn.classList.remove("is-bumping");
+    void btn.offsetWidth;
+    btn.classList.add("is-bumping");
+    clearTimeout(bumpTimer);
+    bumpTimer = setTimeout(() => btn.classList.remove("is-bumping"), 650);
   }
 
   function setQty(key, qty) {
@@ -248,6 +316,8 @@
     const badge = $("#cart-count");
     badge.textContent = n;
     badge.hidden = n === 0;
+    const cartBtn = $("#cart-open");
+    if (cartBtn) cartBtn.classList.toggle("has-items", n > 0);
     $("#cart-total").textContent = money(cartTotal());
 
     const body = $("#cart-body");
@@ -256,21 +326,26 @@
       return;
     }
     body.innerHTML = state.cart.map(i => {
-      const p = byId[i.id];
       const key = rowKey(i);
       const details = rowDetails(i);
-      return `<div class="cart-item">
-        <img src="${imgFor(p)}" alt="" loading="lazy" class="${imgClass(p)}" onerror="${imgOnError(p)}">
+      const promo = i.promoId ? promoById[i.promoId] : null;
+      const first = promo ? byId[i.units?.[0]?.productId] : byId[i.id];
+      const name = promo?.title || first?.name || "Producto";
+      const img = first ? imgFor(first) : "assets/img/crepe.svg";
+      const cls = first ? imgClass(first) : "";
+      const onerr = first ? imgOnError(first) : "";
+      return `<div class="cart-item${promo ? " cart-item-promo" : ""}">
+        <img src="${img}" alt="" loading="lazy" class="${cls}" onerror="${onerr}">
         <div>
-          <h4>${esc(p.name)}</h4>
+          <h4>${promo ? `<span class="cart-promo-tag">Promo</span> ` : ""}${esc(name)}</h4>
           ${details.map(d => `<div class="muted cart-detail">${esc(d)}</div>`).join("")}
-          <div class="muted cart-detail">${money(rowPrice(i))} c/u · ${i.qty} pza</div>
+          <div class="muted cart-detail">${money(rowPrice(i))}${promo ? "" : " c/u"} · ${i.qty} ${promo ? (i.qty === 1 ? "promoción" : "promociones") : "pza"}</div>
           <button class="rm" data-remove="${esc(key)}">Quitar</button>
         </div>
         <div class="qty">
           <button data-dec="${esc(key)}" aria-label="Quitar uno">−</button>
           <output>${i.qty}</output>
-          <button data-inc="${esc(key)}" aria-label="${i.kind === "crepa" ? "Agregar otra crepa" : "Agregar uno"}">+</button>
+          <button data-inc="${esc(key)}" aria-label="${promo ? "Agregar otra promoción" : i.kind === "crepa" ? "Agregar otra crepa" : "Agregar uno"}">+</button>
         </div>
       </div>`;
     }).join("");
@@ -344,14 +419,14 @@
       </div>
       <div class="car-bar">
         <div class="car-info" aria-live="polite">
-          <strong id="car-title">${esc(list[0].title)}</strong>
+          <strong id="car-title"><a id="car-title-link" href="#/promo/${list[0].id}">${esc(list[0].title)}</a></strong>
           <span class="car-price" id="car-price">${money(list[0].price)}</span>
         </div>
         <div class="car-actions">
           <button class="car-toggle" type="button" data-car-pause aria-pressed="false"
                   aria-label="Pausar el cambio automático" title="Pausar / reanudar">❙❙</button>
-          <a class="btn btn-primary btn-sm" id="car-link" target="_blank" rel="noopener"
-             href="${waLink(`¡Hola COFFEE TIME! Me interesa la promo: ${list[0].title} (${money(list[0].price)}).`)}">Pedir</a>
+          <button class="btn btn-primary btn-sm" id="car-link" type="button"
+                  data-promo-order="${list[0].id}">Realizar pedido</button>
         </div>
       </div>
     </div>`;
@@ -388,8 +463,7 @@
         <p>${esc(p.note)}</p>
         <div class="promo-foot">
           <span class="promo-price">${money(p.price)}</span>
-          <a class="btn btn-ghost btn-sm" target="_blank" rel="noopener"
-             href="${waLink(`¡Hola COFFEE TIME! Me interesa la promo: ${p.title} (${money(p.price)}).`)}">Pedir</a>
+          <button class="btn btn-primary btn-sm" type="button" data-promo-order="${p.id}">Realizar pedido</button>
         </div>
       </div>
     </article>`;
@@ -671,9 +745,7 @@
   function promoView(id) {
     const p = promoById[id];
     if (!p) return notFound();
-    const prod = p.productId ? byId[p.productId] : null;
     const rel = MENU.promos.filter(x => x.id !== p.id).slice(0, 3);
-    const msg = `¡Hola COFFEE TIME! Me interesa la promo: ${p.title} (${money(p.price)}).`;
     return `<div class="wrap crumbs"><a href="#/">Inicio</a> / <a href="#/promociones">Promociones</a> / ${esc(p.title)}</div>
       <section class="wrap product promo-detail">
         <div class="product-media promo-detail-media">
@@ -691,13 +763,12 @@
           </div>` : ""}
           <div class="product-price">${money(p.price)}</div>
           <div class="product-actions">
-            <a class="btn btn-primary" href="${waLink(msg)}" target="_blank" rel="noopener">Pedir por WhatsApp</a>
-            ${prod ? `<a class="btn btn-ghost" href="#/producto/${prod.id}">${prod.kind === "crepa" ? "Elegir ingredientes" : `Ver ${esc(prod.name)}`}</a>` : ""}
+            <button class="btn btn-primary" type="button" data-promo-order="${p.id}">Realizar pedido</button>
           </div>
           <div class="meta">
             <div><strong>Vigencia</strong>En sucursal, hasta agotar existencias</div>
             <div><strong>Pedidos</strong>${esc(MENU.phone)}</div>
-            <div><strong>Cómo pedir</strong>Por WhatsApp o en sucursal</div>
+            <div><strong>Cómo pedir</strong>Arma la promo aquí y confirma por WhatsApp</div>
           </div>
         </div>
       </section>
@@ -1065,6 +1136,179 @@
     return true;
   }
 
+  /* ---------------- Flujo de promociones ---------------- */
+
+  const promoUnits = p => p?.flow?.units || [];
+  const promoPicks = p => promoUnits(p).map((u, i) => u.pick ? { u, i } : null).filter(Boolean);
+
+  function promoUnitPrice(u) {
+    const prod = byId[u.productId];
+    if (!prod) return 0;
+    if (u.variant != null && prod.variants) return prod.variants[u.variant]?.[1] ?? basePrice(prod);
+    return prod.variants ? basePrice(prod) : (prod.price || 0);
+  }
+
+  const promoIndividualTotal = p => promoUnits(p).reduce((n, u) => n + promoUnitPrice(u), 0);
+
+  function promoSummaryMarkup(p) {
+    const individual = promoIndividualTotal(p);
+    const save = Math.max(0, individual - p.price);
+    return `<div class="flow-summary">
+      <div class="flow-items">
+        ${promoUnits(p).map((u, i) => {
+          const prod = byId[u.productId];
+          const flavor = u.pick ? promoState.picks[i] : "";
+          return `<div class="flow-item">
+            <img src="${imgFor(prod)}" alt="" class="${imgClass(prod)}" onerror="${imgOnError(prod)}">
+            <div>
+              <strong>${esc(u.label || prod?.name || u.productId)}</strong>
+              <small>${esc([u.variant != null ? prod?.variants?.[u.variant]?.[0] : "", flavor].filter(Boolean).join(" · "))}</small>
+            </div>
+            <span class="flow-item-price">${money(promoUnitPrice(u))}</span>
+          </div>`;
+        }).join("")}
+      </div>
+      <div class="flow-prices">
+        <div class="flow-price-row"><span>Precio individual</span><s>${money(individual)}</s></div>
+        <div class="flow-price-row flow-price-promo"><span>Precio promoción</span><strong>${money(p.price)}</strong></div>
+        ${save > 0 ? `<div class="flow-save">Ahorras ${money(save)}</div>` : ""}
+      </div>
+      ${p.flow.validity ? `<p class="flow-validity">${esc(p.flow.validity)}</p>` : ""}
+    </div>`;
+  }
+
+  function promoStepMarkup(p, current, step) {
+    const { u, i } = current;
+    const prod = byId[u.productId];
+    const chosen = promoState.picks[i] || "";
+    const picks = promoPicks(p);
+    const previous = picks.slice(0, step)
+      .map(({ u: pu, i: pi }) => `<span>${esc(pu.label || byId[pu.productId]?.name)}: <strong>${esc(promoState.picks[pi])}</strong></span>`)
+      .join("");
+    return `<section class="flow-step">
+      <div class="flow-progress">
+        <span>Paso ${step + 1} de ${picks.length}</span>
+        <div class="flow-dots" aria-hidden="true">
+          ${picks.map((_, k) => `<i class="${k < step ? "done" : k === step ? "now" : ""}"></i>`).join("")}
+        </div>
+      </div>
+      <div class="flow-step-product">
+        <img src="${imgFor(prod)}" alt="" class="${imgClass(prod)}" onerror="${imgOnError(prod)}">
+        <div>
+          <strong>${esc(u.label || prod?.name || u.productId)}</strong>
+          <small>${esc(prod?.name || "")}${u.variant != null && prod?.variants?.[u.variant] ? ` · ${esc(prod.variants[u.variant][0])}` : ""}</small>
+        </div>
+      </div>
+      <span class="flow-kicker">Elige el sabor</span>
+      <div class="opt-chips">
+        ${(prod?.flavors || []).map(f => `<button class="opt-chip" type="button" data-promo-flavor="${esc(f)}" aria-pressed="${chosen === f}">${esc(f)}</button>`).join("")}
+      </div>
+      ${previous ? `<p class="flow-picked">${previous}</p>` : ""}
+      ${step > 0 ? `<button class="flow-back" type="button" data-promo-back>‹ Atrás</button>` : ""}
+    </section>`;
+  }
+
+  function promoBodyMarkup(p) {
+    const picks = promoPicks(p);
+    const current = picks[promoState.step];
+    const ready = picks.every(({ i }) => promoState.picks[i]);
+    return `${current ? promoStepMarkup(p, current, promoState.step) : ""}
+      <div id="promo-summary">${!current || ready ? promoSummaryMarkup(p) : ""}</div>`;
+  }
+
+  function promoMarkup(p) {
+    const picks = promoPicks(p);
+    const last = picks.length === 0 || promoState.step >= picks.length - 1;
+    const label = last ? (picks.length ? "Agregar a la canasta" : "Agregar al carrito") : "Confirmar sabor";
+    return `<div class="modal-card promo-flow-card">
+      <header class="modal-head">
+        <div class="modal-product">
+          <img src="${promoImg(p)}" alt="" class="photo" onerror="this.onerror=null;this.src='${promoFallback(p)}'">
+          <div>
+            <h2 id="promo-modal-title">${esc(p.title)}</h2>
+            <p>${esc(p.note)}</p>
+          </div>
+        </div>
+        <button class="icon-btn" type="button" data-close-promo aria-label="Cerrar">✕</button>
+      </header>
+      <div class="modal-body">
+        ${promoBodyMarkup(p)}
+      </div>
+      <footer class="modal-foot">
+        <div class="modal-sum">
+          <div class="modal-total">
+            <span>Precio promoción</span>
+            <strong id="promo-total" aria-live="polite">${money(p.price)}</strong>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-block" type="button" id="promo-next" data-promo-next>${label}</button>
+        <p class="modal-legal">Precios en pesos · el pedido se confirma por WhatsApp.</p>
+      </footer>
+    </div>`;
+  }
+
+  function syncPromo() {
+    const p = promoById[promoState.id];
+    const dlg = $("#promo-dialog");
+    if (!p || !dlg) return;
+    const picks = promoPicks(p);
+    const current = picks[promoState.step];
+    const chosen = current ? promoState.picks[current.i] : "";
+
+    $$("[data-promo-flavor]", dlg).forEach(b => {
+      const on = b.dataset.promoFlavor === chosen;
+      b.classList.toggle("is-on", on);
+      b.setAttribute("aria-pressed", String(on));
+    });
+
+    const summary = $("#promo-summary", dlg);
+    if (summary) {
+      const ready = picks.every(({ i }) => promoState.picks[i]);
+      summary.innerHTML = !current || ready ? promoSummaryMarkup(p) : "";
+    }
+
+    const next = $("#promo-next", dlg);
+    if (next) {
+      const last = picks.length === 0 || promoState.step >= picks.length - 1;
+      next.disabled = current ? !chosen : false;
+      next.textContent = last ? (picks.length ? "Agregar a la canasta" : "Agregar al carrito") : "Confirmar sabor";
+    }
+  }
+
+  function renderPromo() {
+    const p = promoById[promoState.id];
+    const dlg = $("#promo-dialog");
+    if (!p || !dlg) return;
+    dlg.innerHTML = promoMarkup(p);
+    syncPromo();
+    dlg.querySelector("[data-promo-flavor]")?.focus();
+  }
+
+  function openPromo(id) {
+    const p = promoById[id];
+    if (!p?.flow) return;
+    if (p.flow.crepa) {
+      openCustom("arma-tu-crepa");
+      toast("Promo: 3 ingredientes por $70");
+      return;
+    }
+    promoState.id = id;
+    promoState.step = 0;
+    promoState.picks = [];
+    const dlg = $("#promo-dialog");
+    if (!dlg) return;
+    if (dlg.open) dlg.close();
+    dlg.innerHTML = promoMarkup(p);
+    dlg.showModal();
+    syncPromo();
+    dlg.querySelector("[data-promo-flavor], #promo-next")?.focus();
+  }
+
+  function closePromo() {
+    const dlg = $("#promo-dialog");
+    if (dlg?.open) dlg.close();
+  }
+
   /* ---------------- Selector “Agregar otro producto” ---------------- */
   const PICKER_SKIP = new Set(["extras"]);
 
@@ -1250,9 +1494,16 @@
         d.setAttribute("aria-current", String(k === carIndex));
       });
       const p = list[carIndex];
-      $("#car-title").textContent = p.title;
+      const titleLink = $("#car-title-link");
+      if (titleLink) {
+        titleLink.textContent = p.title;
+        titleLink.href = `#/promo/${p.id}`;
+      } else {
+        $("#car-title").textContent = p.title;
+      }
       $("#car-price").textContent = money(p.price);
-      $("#car-link").href = waLink(`¡Hola COFFEE TIME! Me interesa la promo: ${p.title} (${money(p.price)}).`);
+      const carLink = $("#car-link");
+      if (carLink) carLink.dataset.promoOrder = p.id;
     };
     const stop = () => { clearInterval(carTimer); carTimer = null; };
     const start = () => {
@@ -1366,7 +1617,7 @@
       title = `${p?.title ?? "Promoción"} — COFFEE TIME`;
     }
     else if (kind === "contacto") { html = contactView(); title = "Contacto — COFFEE TIME"; }
-    else if (kind === "qr") { html = qrView(); title = "QR y letreros — COFFEE TIME"; }
+    else if (kind === "qr" && SHOW_QR) { html = qrView(); title = "QR y letreros — COFFEE TIME"; }
     else if (kind === "mesa") {
       const n = Number(id);
       const table = MENU.tables?.[n - 1];
@@ -1393,7 +1644,7 @@
 
   /* ---------------- Eventos ---------------- */
   document.addEventListener("click", e => {
-    const t = e.target.closest("[data-add],[data-add-prod],[data-inc],[data-dec],[data-remove],[data-pq],[data-pv],[data-close-drawer],[data-noop],[data-preset],[data-car],[data-car-to],[data-car-pause],[data-crepa-car],[data-crepa-to],[data-clear-query],[data-close-modal],[data-flavor],[data-addon],[data-modal-variant],[data-modal-format],[data-modal-qty],[data-modal-add],[data-modal-more-crepa],[data-modal-picker],[data-picker-add],[data-close-picker],[data-open-cart],[data-print]");
+    const t = e.target.closest("[data-add],[data-add-prod],[data-inc],[data-dec],[data-remove],[data-pq],[data-pv],[data-close-drawer],[data-noop],[data-preset],[data-car],[data-car-to],[data-car-pause],[data-crepa-car],[data-crepa-to],[data-clear-query],[data-close-modal],[data-flavor],[data-addon],[data-modal-variant],[data-modal-format],[data-modal-qty],[data-modal-add],[data-modal-more-crepa],[data-modal-picker],[data-picker-add],[data-close-picker],[data-open-cart],[data-print],[data-promo-order],[data-promo-flavor],[data-promo-next],[data-promo-back],[data-close-promo]");
     if (!t) return;
 
     if (t.matches("[data-print]")) { window.print(); return; }
@@ -1431,6 +1682,32 @@
       else addToCart(p.id, state.pq, p.variants ? state.pv : null);
       return;
     }
+
+    if (t.matches("[data-promo-order]")) { openPromo(t.dataset.promoOrder); return; }
+    if (t.matches("[data-promo-flavor]")) {
+      const p = promoById[promoState.id];
+      const current = promoPicks(p)[promoState.step];
+      if (!current) return;
+      promoState.picks[current.i] = t.dataset.promoFlavor;
+      syncPromo();
+      return;
+    }
+    if (t.matches("[data-promo-back]")) {
+      if (promoState.step > 0) { promoState.step -= 1; renderPromo(); }
+      return;
+    }
+    if (t.matches("[data-promo-next]")) {
+      const p = promoById[promoState.id];
+      const picks = promoPicks(p);
+      if (promoState.step < picks.length - 1) {
+        promoState.step += 1;
+        renderPromo();
+      } else {
+        addPromoToCart();
+      }
+      return;
+    }
+    if (t.matches("[data-close-promo]")) { closePromo(); return; }
 
     if (t.matches("[data-close-modal]")) { closeCustom(); return; }
     if (t.matches("[data-flavor]")) {
@@ -1482,6 +1759,12 @@
     if (t.matches("[data-inc]")) {
       const r = state.cart.find(i => rowKey(i) === t.dataset.inc);
       if (!r) return;
+      if (r.promoId) {
+        const promo = promoById[r.promoId];
+        if (promoPicks(promo).length) { openPromo(r.promoId); return; }
+        setQty(t.dataset.inc, r.qty + 1);
+        return;
+      }
       const p = byId[r.id];
       /* Bebidas con sabor y crepas: reabre el modal en blanco para la nueva pieza. */
       if (p && (p.flavors || p.askFlavor || p.kind === "crepa")) {
@@ -1557,6 +1840,11 @@
   const pickerDialog = $("#picker-dialog");
   pickerDialog?.addEventListener("click", e => {
     if (e.target === pickerDialog) closePicker();
+  });
+
+  const promoDialog = $("#promo-dialog");
+  promoDialog?.addEventListener("click", e => {
+    if (e.target === promoDialog) closePromo();
   });
 
   $("#search").addEventListener("input", e => {

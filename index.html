@@ -60,7 +60,10 @@
       <a href="#/menu">Menú</a>
       <a href="#/promociones">Promociones</a>
       <a href="#/contacto">Contacto</a>
+      <!-- QR y letreros: oculto por ahora. Para mostrarlo otra vez, descomenta
+           esta línea y pon SHOW_QR = true en assets/app.js.
       <a href="#/qr">QR y letreros</a>
+      -->
       <a href="#" data-noop>Privacidad</a>
     </div>
   </div>
@@ -123,6 +126,9 @@
 
 <!-- Modal de personalización -->
 <dialog class="modal" id="custom-dialog" aria-labelledby="modal-title"></dialog>
+
+<!-- Flujo de promociones -->
+<dialog class="modal promo-flow-dialog" id="promo-dialog" aria-labelledby="promo-modal-title"></dialog>
 
 <!-- Selector para agregar otro producto -->
 <dialog class="modal picker-dialog" id="picker-dialog" aria-labelledby="picker-title"></dialog>
